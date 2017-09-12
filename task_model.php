@@ -206,6 +206,7 @@ class Task {
         $opt = array('sourcetype' => ProcessOriginType::TASK, 'sourceid' => $task['id']);
         $this->process->input(time(), 0, $task['processList'], $opt);
         $this->setRunOn($task['id'], time() + $task['frequency']);
+        $this->setLastRun($task['id'], time());
         echo('/npasado/n');
     }
 
@@ -232,11 +233,21 @@ class Task {
         return $result;
     }
 
-    private function setRunOn($id, $new_run_on_date) {
+    private function setRunOn($id, $new_run_on_time) {
         $id = (int) $id;
-        $new_run_on_date = preg_replace('/([^0-9\-: ])/', '', $new_run_on_date);
+        $new_run_on_time = (int) $new_run_on_time;
 
-        $result = $this->mysqli->query("UPDATE `tasks` SET `run_on`='$new_run_on_date' WHERE `id`= '$id'");
+        $result = $this->mysqli->query("UPDATE `tasks` SET `run_on`='$new_run_on_time' WHERE `id`= '$id'");
+        if ($this->redis) {
+//ToDo
+        }
+        return $result;
+    }
+        private function setLastRun($id, $last_run_time) {
+        $id = (int) $id;
+        $last_run_time = (int) $last_run_time;
+
+        $result = $this->mysqli->query("UPDATE `tasks` SET `time`='$last_run_time' WHERE `id`= '$id'");
         if ($this->redis) {
 //ToDo
         }
