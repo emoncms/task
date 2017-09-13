@@ -28,7 +28,7 @@ function task_controller() {
 
     $result = $mysqli->query("SHOW TABLES LIKE 'groups'");
     if ($result->num_rows > 0) {
-        require_once "Modules/group/goroup_model.php";
+        require_once "Modules/group/group_model.php";
         $group = new Group($mysqli, $redis, $user, $feed, null);
     }
     else {
@@ -43,12 +43,21 @@ function task_controller() {
             $route->format = "html";
             $result = view("Modules/task/task_view.php", array());
         }
-        if ($route->action == "") {
-            //
+        if ($route->action == 'settask') {
+            $route->format = "json";
+            $result = $task->set_fields($session['userid'], get('taskid'), get('fields'));
+        }
+        if ($route->action == 'deletetask') {
+            $route->format = "json";
+            $result = $task->delete_task($session['userid'], get('taskid'));
+        }
+        if ($route->action == 'setprocesslist') {
+            $route->format = "json";
+            $result = $task->set_processlist($session['userid'], get('id'), post('processlist'));
         }
     }
-    else if ($session['read']) {
-        if ($route->action == "list") {
+    if ($session['read']) {
+        if ($route->action == "getusertasks") {
             $route->format = "json";
             $result = $task->get_tasks($session['userid']);
         }

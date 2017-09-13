@@ -1,0 +1,47 @@
+#tasks-wrapper {
+    padding:0px;
+    margin:0px;
+    padding-left: 250px;
+}
+
+.sidebar {
+    margin-top:0px;
+    margin-left: -250px;
+    left: 250px;
+    width: 250px;
+    background: #eee;
+    position: fixed;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.page-content {
+    width: 100%;
+    padding-left:0px;
+    max-width:1280px
+}
+
+#sidebar-open {
+    float:left;
+    margin-right:10px;
+}
+
+#sidebar-close {
+    float:right; 
+    cursor:pointer; 
+    padding:10px;
+}
+
+a.task-tag{
+    cursor: pointer;
+    margin: 10px 0 15px;
+}
+.task-tag{
+}
+.task-tag table{
+    margin-top:10px
+}
+#user-tasks-table td:nth-of-type(4) { width:250px; text-align: left; }
+#user-tasks-table th:nth-of-type(6), #user-tasks-table td:nth-of-type(6) { text-align: center; }
+#user-tasks-table th:nth-of-type(7),#user-tasks-table td:nth-of-type(7) { text-align: center; }
+#user-tasks-table th:nth-of-type(8), #user-tasks-table td:nth-of-type(8) { text-align: center; }

@@ -85,7 +85,7 @@ if (!isset($task_cron_frequency))    // Script update rate, defined in settings.
     $task_cron_frequency = 1;       //secs
 while (true) {
     $task->runScheduledTasks();
-    sleep($task_schedule_frequency); 
+    //sleep($task_schedule_frequency); 
     die;
 }
 ?>

@@ -145,7 +145,9 @@ class Task {
         return $array_of_tasks;
     }
 
+    //--------------------------
     //  Save Tasks
+    //--------------------------
     public function save_task($userid, $attributes) {
         $id = (int) $attributes['id'];
         $userid = (int) $userid;
@@ -176,6 +178,59 @@ class Task {
                 return 0;
             else
                 return $id;
+        }
+    }
+
+    public function set_fields($userid, $id, $fields) {
+        $userid = (int) $userid;
+        $id = (int) $id;
+        $fields = json_decode(stripslashes($fields));
+
+        $array = array();
+
+        // Repeat this line changing the field name to add fields that can be updated:
+        if (isset($fields->description))
+            $array[] = "`description` = '" . preg_replace('/[^\p{L}_\p{N}\s-]/u', '', $fields->description) . "'";
+        if (isset($fields->name))
+            $array[] = "`name` = '" . preg_replace('/[^\p{L}_\p{N}\s-.]/u', '', $fields->name) . "'";
+        if (isset($fields->tag))
+            $array[] = "`tag` = '" . preg_replace('/[^\p{L}_\p{N}\s-.]/u', '', $fields->tag) . "'";
+        if (isset($fields->frequency))
+            $array[] = "`frequency` = '" . (int) $fields->frequency . "'";
+        if (isset($fields->enabled))
+            $array[] = "`enabled` = '" . (bool) $fields->enabled . "'";
+
+        // Convert to a comma seperated string for the mysql query
+        $fieldstr = implode(",", $array);
+        $this->mysqli->query("UPDATE tasks SET " . $fieldstr . " WHERE `id` = '$id' AND `userid` = '$userid'");
+
+        // CHECK REDIS?
+        // UPDATE REDIS
+        /* if (isset($fields->name) && $this->redis)
+          $this->redis->hset("input:$id", 'name', $fields->name);
+          if (isset($fields->description) && $this->redis)
+          $this->redis->hset("input:$id", 'description', $fields->description);
+         */
+        if ($this->mysqli->affected_rows > 0) {
+            return array('success' => true, 'message' => 'Field updated');
+        }
+        else {
+            return array('success' => false, 'message' => 'Field could not be updated');
+        }
+    }
+
+    public function set_processlist($userid, $id, $processlist) {
+        $id = (int) $id;
+        $processlist = preg_replace('/([^0-9:],)/', '', $processlist);
+        
+        $this->mysqli->query("UPDATE tasks SET processList = '$processlist' WHERE id='$id' AND userid='$userid'");
+        if ($this->mysqli->affected_rows > 0) {
+            // CHECK REDIS
+            //if ($this->redis) $this->redis->hset("feed:$id",'processList',$processlist);
+            return array('success' => true, 'message' => 'Task processlist updated');
+        }
+        else {
+            return array('success' => false, 'message' => 'Task processlist was not updated');
         }
     }
 
@@ -243,7 +298,8 @@ class Task {
         }
         return $result;
     }
-        private function setLastRun($id, $last_run_time) {
+
+    private function setLastRun($id, $last_run_time) {
         $id = (int) $id;
         $last_run_time = (int) $last_run_time;
 
@@ -252,25 +308,6 @@ class Task {
 //ToDo
         }
         return $result;
-    }
-
-    public function set_processlist($id, $processlist) {
-        $stmt = $this->mysqli->prepare("UPDATE tasks SET processList=? WHERE id=?");
-        $stmt->bind_param("si", $processlist, $id);
-        if (!$stmt->execute()) {
-            return array('success' => false, 'message' => _("Error setting processlist"));
-        }
-
-        if ($this->mysqli->affected_rows > 0) {
-            // CHECK REDIS
-            if ($this->redis) {
-                //$this->redis->hset("input:$id", 'processList', $processlist);
-            }
-            return array('success' => true, 'message' => 'Task processlist updated');
-        }
-        else {
-            return array('success' => false, 'message' => 'Task processlist was not updated');
-        }
     }
 
 }
