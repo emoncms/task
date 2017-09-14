@@ -199,6 +199,10 @@ class Task {
             $array[] = "`frequency` = '" . (int) $fields->frequency . "'";
         if (isset($fields->enabled))
             $array[] = "`enabled` = '" . (bool) $fields->enabled . "'";
+        if (isset($fields->run_on))
+            $array[] = "`run_on` = '" . preg_replace('/([^0-9])/', '', $fields->run_on) . "'";
+        if (isset($fields->time))
+            $array[] = "`time` = '" . preg_replace('/([^0-9])/', '', $fields->time) . "'";
 
         // Convert to a comma seperated string for the mysql query
         $fieldstr = implode(",", $array);
@@ -222,7 +226,7 @@ class Task {
     public function set_processlist($userid, $id, $processlist) {
         $id = (int) $id;
         $processlist = preg_replace('/([^0-9:],)/', '', $processlist);
-        
+
         $this->mysqli->query("UPDATE tasks SET processList = '$processlist' WHERE id='$id' AND userid='$userid'");
         if ($this->mysqli->affected_rows > 0) {
             // CHECK REDIS
@@ -290,7 +294,7 @@ class Task {
 
     private function setRunOn($id, $new_run_on_time) {
         $id = (int) $id;
-        $new_run_on_time = (int) $new_run_on_time;
+        $new_run_on_time = preg_replace('/([^0-9])/', '', $new_run_on_time);
 
         $result = $this->mysqli->query("UPDATE `tasks` SET `run_on`='$new_run_on_time' WHERE `id`= '$id'");
         if ($this->redis) {
@@ -301,7 +305,7 @@ class Task {
 
     private function setLastRun($id, $last_run_time) {
         $id = (int) $id;
-        $last_run_time = (int) $last_run_time;
+        $last_run_time = preg_replace('/([^0-9])/', '', $last_run_time);
 
         $result = $this->mysqli->query("UPDATE `tasks` SET `time`='$last_run_time' WHERE `id`= '$id'");
         if ($this->redis) {

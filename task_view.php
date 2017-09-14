@@ -7,6 +7,8 @@ $fullwidth = true;
 <script language="javascript" type="text/javascript" src="<?php echo $path; ?>Modules/task/task.js"></script>
 <script type="text/javascript" src="<?php echo $path; ?>Lib/tablejs/table.js"></script>
 <script type="text/javascript" src="<?php echo $path; ?>Lib/tablejs/custom-table-fields.js"></script>
+<link href="<?php echo $path; ?>Lib/bootstrap-datetimepicker-0.0.11/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+<script type="text/javascript" src="<?php echo $path; ?>Lib/bootstrap-datetimepicker-0.0.11/js/bootstrap-datetimepicker.min.js"></script>
 
 <!-------------------------------------------------------------------------------------------
 MAIN
@@ -18,8 +20,6 @@ MAIN
 
         <div style="padding-bottom:15px">
             <div id="create-task"><i class="icon-plus"></i>Create task</div>
-            <div class="userstitle"><span id="groupname">Users</span></div>
-            <div id="groupdescription"></div>
         </div>
 
         <h3>My tasks</h3>
@@ -101,7 +101,8 @@ JAVASCRIPT
             'processList': {'title': '<?php echo _("Process list"); ?>', 'type': "processlist"},
             'frequency': {'title': "<?php echo _('Frequency'); ?>", 'type': "text"},
             'enabled': {'title': "<?php echo _('Enabled'); ?>", 'type': "icon", 'trueicon': "icon-ok", 'falseicon': "icon-remove"},
-            'time': {'title': "<?php echo _('Last run'); ?>", 'type': "fixed"},
+            'time': {'title': "<?php echo _('Last run'); ?>", 'type': "date"},
+            'run_on': {'title': "<?php echo _('Next run'); ?>", 'type': "date"},
             // Actions
             'edit-action': {'title': '', 'type': "edit"},
             'delete-action': {'title': '', 'type': "delete"},
@@ -109,6 +110,7 @@ JAVASCRIPT
         }
 
         table.data = user_tasks;
+        console.log(user_tasks)
         table.draw();
     }
 
@@ -118,6 +120,14 @@ JAVASCRIPT
     //------------------------------------
     // Table actions
     //------------------------------------
+    $("#user-tasks-table").bind("onEdit", function (e) {
+        setTimeout(function () { // The onEdit event is triggered before adding the html of the field, we need to wait until the html there before we can add the datetimepicker
+            $('.date').each(function (index) {
+                $(this).datetimepicker({language: 'en-EN'});
+            });
+        }, 100);
+    });
+
     $("#user-tasks-table").bind("onSave", function (e, id, fields_to_update) {
         task.setTask(id, fields_to_update);
     });
@@ -127,8 +137,8 @@ JAVASCRIPT
         $('#taskDeleteModal').attr('the_id', id);
         $('#taskDeleteModal').attr('the_row', row);
     });
-    
-        $("#taskDelete-confirm").click(function () {
+
+    $("#taskDelete-confirm").click(function () {
         var id = $('#taskDeleteModal').attr('the_id');
         var row = $('#taskDeleteModal').attr('the_row');
         task.deleteTask(id);
@@ -160,7 +170,7 @@ JAVASCRIPT
             alert('ERROR: Could not save processlist. ' + result.message);
         }
     });
-        
+
     // ----------------------------------------------------------------------------------------
     // Actions
     // ----------------------------------------------------------------------------------------

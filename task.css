@@ -1,7 +1,7 @@
 #tasks-wrapper {
     padding:0px;
     margin:0px;
-    padding-left: 250px;
+    padding: 0 25px;
 }
 
 .sidebar {
@@ -18,7 +18,6 @@
 .page-content {
     width: 100%;
     padding-left:0px;
-    max-width:1280px
 }
 
 #sidebar-open {
@@ -41,7 +40,7 @@ a.task-tag{
 .task-tag table{
     margin-top:10px
 }
-#user-tasks-table td:nth-of-type(4) { width:250px; text-align: left; }
+
+#user-tasks-table{width:100%}
+
 #user-tasks-table th:nth-of-type(6), #user-tasks-table td:nth-of-type(6) { text-align: center; }
-#user-tasks-table th:nth-of-type(7),#user-tasks-table td:nth-of-type(7) { text-align: center; }
-#user-tasks-table th:nth-of-type(8), #user-tasks-table td:nth-of-type(8) { text-align: center; }
