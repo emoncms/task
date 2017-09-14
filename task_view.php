@@ -91,9 +91,6 @@ JAVASCRIPT
 //
     }
 
-
-
-
 // ----------------------------------------------------------------------------------------
 // Functions
 // ----------------------------------------------------------------------------------------
@@ -116,13 +113,13 @@ JAVASCRIPT
         table.groupfields = {
             'dummy-1': {'title': '', 'type': "blank"},
             'dummy-2': {'title': '', 'type': "blank"},
-            'dummy-3':{'title': '', 'type': "blank"},
-            'dummy-4':{'title': '', 'type': "blank"},
-            'dummy-5':{'title': '', 'type': "blank"},
-            'dummy-6':{'title': '', 'type': "blank"},
-            'dummy-7':{'title': '', 'type': "blank"},
-            'dummy-8':{'title': '', 'type': "blank"},
-            'dummy-9':{'title': '', 'type': "blank"}
+            'dummy-3': {'title': '', 'type': "blank"},
+            'dummy-4': {'title': '', 'type': "blank"},
+            'dummy-5': {'title': '', 'type': "blank"},
+            'dummy-6': {'title': '', 'type': "blank"},
+            'dummy-7': {'title': '', 'type': "blank"},
+            'dummy-8': {'title': '', 'type': "blank"},
+            'dummy-9': {'title': '', 'type': "blank"}
         };
         table.fields = {
             'id': {'title': "<?php echo _('Id'); ?>", 'type': "fixed"},
@@ -141,7 +138,6 @@ JAVASCRIPT
         }
 
         table.data = user_tasks;
-        console.log(user_tasks)
         table.draw();
     }
 
@@ -161,6 +157,7 @@ JAVASCRIPT
 
     $("#user-tasks-table").bind("onSave", function (e, id, fields_to_update) {
         task.setTask(id, fields_to_update);
+        draw_user_tasks();
     });
 
     $("#user-tasks-table").bind("onDelete", function (e, id, row) {
