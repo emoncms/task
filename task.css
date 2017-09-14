@@ -44,3 +44,7 @@ a.task-tag{
 #user-tasks-table{width:100%}
 
 #user-tasks-table th:nth-of-type(6), #user-tasks-table td:nth-of-type(6) { text-align: center; }
+
+#create-task{float: right; cursor:pointer}
+
+#taskCreateModal td{padding:10px}

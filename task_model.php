@@ -148,36 +148,26 @@ class Task {
     //--------------------------
     //  Save Tasks
     //--------------------------
-    public function save_task($userid, $attributes) {
-        $id = (int) $attributes['id'];
+    public function create_task($userid, $name, $description, $tag, $frequency, $run_on) {
         $userid = (int) $userid;
-        $name = preg_replace('/[^\w\s-.]/', '', $attributes['name']);
-        $description = preg_replace('/[^\w\s-.]/', '', $attributes['description']);
-        $run_on = (preg_replace('/([^0-9\-: ])/', '', $attributes['run_on']));
-//$run_on = $attributes['run_on'];
-        $expiry_date = preg_replace('/([^0-9\-: ])/', '', $attributes['expiry_date']);
-        $frequency = (int) $attributes['frequency'];
-        $blocks = preg_replace('/[^\w\s-.\/<>"=]/', '', $attributes['blocks']);
-        $enabled = $attributes['enabled'] == 'true' ? 1 : 0;
+        $name = preg_replace('/[^\p{N}\p{L}_\s-:]/u', '', $name);
+        $description = preg_replace('/[^\p{N}\p{L}_\s-:]/u', '', $description);
+        $tag = preg_replace('/[^\p{N}\p{L}_\s-:]/u', '', $tag);
+        $run_on = (preg_replace('/([^0-9])/', '', $run_on));
+        $frequency = (int) $frequency;
+        $enabled = 0;
 
-        if ($this->task_exists($attributes['id']) == false) {
-            $task_saved = $this->mysqli->query("INSERT INTO `tasks` (`userid`, `name`, `description`, `run_on`, `expiry_date`, `frequency`, `blocks`,`enabled`) VALUES ('$userid', '$name', '$description', '$run_on', '$expiry_date', '$frequency', '$blocks','$enabled')");
-            if ($this->redis && $task_saved) {
+        if ($this->name_exists($userid, $name) == true)
+            return array('success' => false, 'message' => "Name already exists");
+        else {
+            $task_created = $this->mysqli->query("INSERT INTO `tasks` (`userid`, `name`, `description`, `tag`, `run_on`, `frequency`, `enabled`) VALUES ('$userid', '$name', '$description', '$tag', '$run_on', '$frequency','$enabled')");
+            if ($this->redis && $task_created) {
 //ToDo insert task
             }
-            if ($task_saved == false || $task_saved == 0)
-                return 0;
+            if ($task_created == false || $task_created == 0)
+                return array('success' => false, 'message' => "Task could not be saved");
             else
                 return $this->mysqli->insert_id;
-        } else {
-            $task_saved = $this->mysqli->query("UPDATE `tasks` SET `name`='$name', `description`='$description', `run_on`='$run_on', `expiry_date`='$expiry_date', `frequency`='$frequency', `blocks`='$blocks', `enabled`='$enabled' WHERE `id`= '$id' AND `userid` = '$userid'");
-            if ($this->redis && $task_saved) {
-//ToDo update task
-            }
-            if ($task_saved == false || $task_saved == 0)
-                return 0;
-            else
-                return $id;
         }
     }
 
@@ -312,6 +302,19 @@ class Task {
 //ToDo
         }
         return $result;
+    }
+
+    private function name_exists($userid, $name) {
+        if ($this->redis) {
+            
+        }
+        else {
+            $result = $this->mysqli->query("SELECT id FROM tasks WHERE `name` = '$name' AND `userid` = '$userid'");
+        }
+        if ($result->num_rows > 0)
+            return true;
+        else
+            return false;
     }
 
 }

@@ -55,6 +55,10 @@ function task_controller() {
             $route->format = "json";
             $result = $task->set_processlist($session['userid'], get('id'), post('processlist'));
         }
+        if ($route->action == 'createtask') {
+            $route->format = "json";
+            $result = $task->create_task($session['userid'], get('name'), get('description'), get('tag'), get('frequency'), get('run_on'));
+        }
     }
     if ($session['read']) {
         if ($route->action == "getusertasks") {

@@ -28,5 +28,12 @@ var task = {
             }});
         return result;
     },
+    'createTask': function (name, description, tag, frequency, run_on) {
+        var result = {};
+        $.ajax({url: path + "task/createtask.json?name=" + name + "&description=" + description + "&tag=" + tag + "&frequency=" + frequency + "&run_on=" + run_on, async: false, success: function (data) {
+                result = data;
+            }});
+        return result;
+    },
 };
 

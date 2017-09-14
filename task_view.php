@@ -39,6 +39,28 @@ MAIN
 MODALS
 -------------------------------------------------------------------------------------------->
 
+<div id="taskCreateModal" class="modal hide" tabindex="-1" role="dialog" aria-labelledby="taskCreateModalLabel" aria-hidden="true" data-backdrop="static">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="taskCreateModalLabel"><?php echo _('Create task'); ?></h3>
+    </div>
+    <div class="modal-body">
+        <p><?php echo _('Once a task is created you will need to set up the Process List and enable it'); ?></p>
+        <table>
+            <tr><td><?php echo _('Name*'); ?></td><td><input id="task-create-name" type="text" /></td></tr>
+            <tr><td><?php echo _('Description'); ?></td><td><input id="task-create-description" type="text" /></td></tr>
+            <tr><td><?php echo _('Tag'); ?></td><td><input id="task-create-tag" type="text" /></td></tr>
+            <tr><td><?php echo _('Frequency (seconds)'); ?></td><td><input id="task-create-frequency" type="number" min="1" value="1" /></td></tr>
+            <tr><td><?php echo _('Start date'); ?></td><td><div class="input-append date" id="task-create-run-on" data-format="dd/MM/yyyy hh:mm"><input data-format="dd/MM/yyyy hh:mm" type="text" /><span class="add-on"> <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i></span></div></td></tr>
+        </table>
+        <div id="task-create-message" class="alert alert-block hide"></div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true"><?php echo _('Cancel'); ?></button>
+        <button id="taskCreate-confirm" class="btn btn-primary"><?php echo _('Create task'); ?></button>
+    </div>
+</div>
+
 <div id="taskDeleteModal" class="modal hide" tabindex="-1" role="dialog" aria-labelledby="taskDeleteModalLabel" aria-hidden="true" data-backdrop="static">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
@@ -92,6 +114,15 @@ JAVASCRIPT
         table.groupby = 'tag';
         table.deletedata = false;
         table.groupfields = {
+            'dummy-1': {'title': '', 'type': "blank"},
+            'dummy-2': {'title': '', 'type': "blank"},
+            'dummy-3':{'title': '', 'type': "blank"},
+            'dummy-4':{'title': '', 'type': "blank"},
+            'dummy-5':{'title': '', 'type': "blank"},
+            'dummy-6':{'title': '', 'type': "blank"},
+            'dummy-7':{'title': '', 'type': "blank"},
+            'dummy-8':{'title': '', 'type': "blank"},
+            'dummy-9':{'title': '', 'type': "blank"}
         };
         table.fields = {
             'id': {'title': "<?php echo _('Id'); ?>", 'type': "fixed"},
@@ -174,6 +205,52 @@ JAVASCRIPT
     // ----------------------------------------------------------------------------------------
     // Actions
     // ----------------------------------------------------------------------------------------
+    $('#create-task').click(function () {
+        $('#task-create-message').hide();
+        $('#task-create-run-on').datetimepicker({language: 'en-EN', useCurrent: true});
+        var now = new Date();
+        var today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes());
+        var picker = $('#task-create-run-on').data('datetimepicker');
+        picker.setLocalDate(today);
+        $('#taskCreateModal').modal('show');
+    });
 
+    $('#taskCreate-confirm').click(function () {
+        $('#task-create-message').hide();
+        var name = $('#task-create-name').val();
+        if ($('#task-create-name').val() == '')
+            $('#task-create-message').html('<p>Name cannot be empty</p>').show();
+        else {
+            var description = $('#task-create-name').val();
+            var tag = $('#task-create-tag').val();
+            var frequency = $('#task-create-frequency').val();
+            var run_on = parse_timepicker_time($('#task-create-run-on input').val());
+            var result = task.createTask(name, description, tag, frequency, run_on);
+            if (result.success == false)
+                $('#task-create-message').html('<p>' + result.message + '</p>').show();
+            else
+                $('#taskCreateModal').modal('hide');
+
+        }
+    });
+
+    // ----------------------------------------------------------------------------------------
+    // Functions
+    // ----------------------------------------------------------------------------------------
+    function parse_timepicker_time(timestr) {
+        var tmp = timestr.split(" ");
+        if (tmp.length != 2)
+            return false;
+
+        var date = tmp[0].split("/");
+        if (date.length != 3)
+            return false;
+
+        var time = tmp[1].split(":");
+        if (time.length != 2)
+            return false;
+
+        return new Date(date[2], date[1] - 1, date[0], time[0], time[1], 0).getTime() / 1000;
+    }
 
 </script>
