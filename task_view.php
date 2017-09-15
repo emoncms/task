@@ -32,6 +32,7 @@ MAIN
             <p>ToDo</p>
         </table>
 
+        <div id="task-loader" class="ajax-loader hide"></div>
     </div>
 </div>
 
@@ -197,6 +198,20 @@ JAVASCRIPT
         } else {
             alert('ERROR: Could not save processlist. ' + result.message);
         }
+    });
+
+    $("#user-tasks-table").bind("onDraw", function (e, id, row) {
+        // Replace dates that are 0 with the relevant information
+        $('[field="time"]').each(function () { // Last run
+            if ($(this).html() === "1/1/1970 0:0") {
+                $(this).html("Never");
+            }
+        });
+        $('[field="run_on"]').each(function () { // When frequency is 0 it means that task is only run once (on the start date). When this is the case run_on is set to 0 (1/1/1970 0:0)
+            if ($(this).html() === "1/1/1970 0:0") {
+                $(this).html("Never");
+            }
+        });
     });
 
     // ----------------------------------------------------------------------------------------
