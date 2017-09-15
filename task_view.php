@@ -130,7 +130,7 @@ JAVASCRIPT
             'processList': {'title': '<?php echo _("Process list"); ?>', 'type': "processlist"},
             'frequency': {'title': "<?php echo _("Frequency") . " <i title='" . _("When frequency is 0 the task will only be run once (no new Run On time will be set)") . "' class='icon-question-sign'></i>" ?>", 'type': "text"},
             'enabled': {'title': "<?php echo _('Enabled'); ?>", 'type': "icon", 'trueicon': "icon-ok", 'falseicon': "icon-remove"},
-            'time': {'title': "<?php echo _('Last run'); ?>", 'type': "date"},
+            'time': {'title': "<?php echo _('Last run'); ?>", 'type': "fixeddate"},
             'run_on': {'title': "<?php echo _('Next run'); ?>", 'type': "date"},
             // Actions
             'edit-action': {'title': '', 'type': "edit"},
