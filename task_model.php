@@ -154,6 +154,7 @@ class Task {
         $description = preg_replace('/[^\p{N}\p{L}_\s-:]/u', '', $description);
         $tag = preg_replace('/[^\p{N}\p{L}_\s-:]/u', '', $tag);
         $run_on = (preg_replace('/([^0-9])/', '', $run_on));
+        $frequency = preg_replace("/[^\p{L}_\p{N}\s-.],'/u", '', $frequency);
         $enabled = 0;
 
         if ($this->name_exists($userid, $name) == true)
@@ -173,7 +174,6 @@ class Task {
     public function set_fields($userid, $id, $fields) {
         $userid = (int) $userid;
         $id = (int) $id;
-        $fields = preg_replace('/[^\p{N}\p{L}_\s-:]/u', '', $fields);
         $fields = json_decode(stripslashes($fields));
 
         $array = array();
@@ -185,8 +185,11 @@ class Task {
             $array[] = "`name` = '" . preg_replace('/[^\p{L}_\p{N}\s-.]/u', '', $fields->name) . "'";
         if (isset($fields->tag))
             $array[] = "`tag` = '" . preg_replace('/[^\p{L}_\p{N}\s-.]/u', '', $fields->tag) . "'";
-        if (isset($fields->frequency))
-            $array[] = "`frequency` = '" . (int) $fields->frequency . "'";
+        if (isset($fields->frequency)) {
+            $str = "`frequency` = '" . json_encode($fields->frequency) . "'";
+            $str = str_replace('"', '\"', $str);  // add slashes, otherwise SQL query below breaks
+            $array[] = $str;
+        }
         if (isset($fields->enabled))
             $array[] = "`enabled` = '" . (bool) $fields->enabled . "'";
         if (isset($fields->run_on))
@@ -254,10 +257,20 @@ class Task {
     private function run_task($task) {
         $opt = array('sourcetype' => ProcessOriginType::TASK, 'sourceid' => $task['id']);
         $this->process->input(time(), 0, $task['processList'], $opt);
-        if ($task['frequency'] == 0) // Task to be run only once
+        $frequency = json_decode($task['frequency']);
+        if ($frequency->type == 'time') {
+            $seconds = 7 * 24 * 3600 * $frequency->weeks;
+            $seconds += 24 * 3600 * $frequency->days;
+            $seconds += 3600 * $frequency->hours;
+            $seconds += 60 * $frequency->minutes;
+            $seconds += $frequency->seconds;
+        }
+
+        echo var_dump($seconds);
+        if ($frequency->type == 'once') // Task to be run only once
             $this->setRunOn($task['id'], 0); // when run_on is 0 the task is not run anymore
         else
-            $this->setRunOn($task['id'], time() + $task['frequency']);
+            $this->setRunOn($task['id'], time() + $seconds);
         $this->setLastRun($task['id'], time());
     }
 

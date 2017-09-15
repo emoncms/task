@@ -85,6 +85,62 @@ JAVASCRIPT
     var path = "<?php echo $path; ?>";
     var userid = <?php echo $session["userid"]; ?>;
     var group_support = false;
+    // Extend table library field types with customtablefields
+    for (z in customtablefields)
+        table.fieldtypes[z] = customtablefields[z];
+    // Extend table with a new field type for frecuency
+    var frequency_field_type = {
+        'draw': function (t, row, child_row, field) {
+            var frequency = JSON.parse(t.data[row][field]);
+            if (frequency.type == 'time') {
+                var string = '';
+                var first = true;
+                if (frequency.weeks != 0) {
+                    string += frequency.weeks + ' weeks';
+                    first = false;
+                }
+                if (frequency.days != 0) {
+                    string += first === false ? ', ' + frequency.days + ' days' : frequency.days + ' days';
+                    first = false;
+                }
+                if (frequency.hours != 0) {
+                    string += first === false ? ', ' + frequency.hours + ' hours' : frequency.hours + ' hours';
+                    first = false;
+                }
+                if (frequency.minutes != 0) {
+                    string += first === false ? ', ' + frequency.minutes + ' minutes' : frequency.minutes + ' minutes';
+                    first = false;
+                }
+                if (frequency.seconds != 0) {
+                    string += first === false ? ', ' + frequency.seconds + ' seconds' : frequency.seconds + ' seconds';
+                }
+            }
+            return string;
+        },
+        'edit': function (t, row, child_row, field) {
+            var frequency = JSON.parse(t.data[row][field]);
+            var str = "<table><tr><td>Weeks</td><td><input id='frequency-weeks' type='number' min='0' value='" + frequency.weeks + "' style='width:45px' /></td></tr>";
+            str += "<tr><td>Days</td><td><input id='frequency-days' type='number' min='0' value='" + frequency.days + "' style='width:45px' /></td></tr>";
+            str += "<tr><td>Hours</td><td><input id='frequency-hours' type='number' min='0' value='" + frequency.hours + "' style='width:45px' /></td></tr>";
+            str += "<tr><td>Minutes</td><td><input id='frequency-minutes' type='number' min='0' value='" + frequency.minutes + "' style='width:45px' /></td></tr>";
+            str += "<tr><td>Seconds</td><td><input id='frequency-seconds' type='number' min='0' value='" + frequency.seconds + "' style='width:45px' /></td></tr></table>";
+            return str;
+        },
+        'save': function (t, row, child_row, field) {
+            var frequency = {};
+            frequency.type = 'time';
+            frequency.weeks = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] #frequency-weeks").val();
+            frequency.days = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] #frequency-days").val();
+            frequency.hours = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] #frequency-hours").val();
+            frequency.minutes = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] #frequency-minutes").val();
+            frequency.seconds = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] #frequency-seconds").val();
+            console.log(frequency)
+            return JSON.stringify(frequency);
+        }
+
+    };
+    table.fieldtypes.frequency = frequency_field_type;
+
     draw_user_tasks();
     if (group_support === false)
         $('.if-groups-support').hide();
@@ -98,15 +154,10 @@ JAVASCRIPT
     function draw_user_tasks() {
         $('#user-tasks-table').html('');
         var user_tasks = task.getUserTasks();
-
         if (user_tasks.length > 0)
             $('#no-user-tasks').hide();
         else
             $('#user-tasks-list').show();
-
-        // Extend table library field types
-        for (z in customtablefields)
-            table.fieldtypes[z] = customtablefields[z];
         table.element = "#user-tasks-table";
         //table.groupprefix = "Node ";
         table.groupby = 'tag';
@@ -128,7 +179,7 @@ JAVASCRIPT
             'name': {'title': '<?php echo _("Name"); ?>', 'type': "text"},
             'description': {'title': '<?php echo _("Description"); ?>', 'type': "text"},
             'processList': {'title': '<?php echo _("Process list"); ?>', 'type': "processlist"},
-            'frequency': {'title': "<?php echo _("Frequency") . " <i title='" . _("When frequency is 0 the task will only be run once (no new Run On time will be set)") . "' class='icon-question-sign'></i>" ?>", 'type': "text"},
+            'frequency': {'title': "<?php echo _("Frequency") . " <i title='" . _("When frequency is 0 the task will only be run once (no new Run On time will be set)") . "' class='icon-question-sign'></i>" ?>", 'type': "frequency"},
             'enabled': {'title': "<?php echo _('Enabled'); ?>", 'type': "icon", 'trueicon': "icon-ok", 'falseicon': "icon-remove"},
             'time': {'title': "<?php echo _('Last run'); ?>", 'type': "fixeddate"},
             'run_on': {'title': "<?php echo _('Next run'); ?>", 'type': "date"},
@@ -155,28 +206,25 @@ JAVASCRIPT
             });
         }, 100);
     });
-
     $("#user-tasks-table").bind("onSave", function (e, id, fields_to_update) {
+        if (fields_to_update.frequency != undefined)
+            fields_to_update.frequency = JSON.parse(fields_to_update.frequency); // frequency is a string, when we call task.setTask it stringfys all the fields, if we don't parse it now the final strinng is corrupted JSON 
         task.setTask(id, fields_to_update);
         draw_user_tasks();
     });
-
     $("#user-tasks-table").bind("onDelete", function (e, id, row) {
         $('#taskDeleteModal').modal('show');
         $('#taskDeleteModal').attr('the_id', id);
         $('#taskDeleteModal').attr('the_row', row);
     });
-
     $("#taskDelete-confirm").click(function () {
         var id = $('#taskDeleteModal').attr('the_id');
         var row = $('#taskDeleteModal').attr('the_row');
         task.deleteTask(id);
         table.remove(row);
         table.draw();
-
         $('#taskDeleteModal').modal('hide');
     });
-
     $("#user-tasks-table").on('click', '.icon-wrench', function () {
         var i = table.data[$(this).attr('row')];
         console.log(i);
@@ -189,7 +237,6 @@ JAVASCRIPT
         var processlist = processlist_ui.decode(i.processList); // Task process list
         processlist_ui.load(contextid, processlist, contextname, null, null); // load configs
     });
-
     $("#save-processlist").click(function () {
         console.log(processlist_ui)
         var result = task.setProcessList(processlist_ui.contextid, processlist_ui.encode(processlist_ui.contextprocesslist));
@@ -199,7 +246,6 @@ JAVASCRIPT
             alert('ERROR: Could not save processlist. ' + result.message);
         }
     });
-
     $("#user-tasks-table").bind("onDraw", function (e, id, row) {
         // Replace dates that are 0 with the relevant information
         $('[field="time"]').each(function () { // Last run
@@ -213,7 +259,6 @@ JAVASCRIPT
             }
         });
     });
-
     // ----------------------------------------------------------------------------------------
     // Actions
     // ----------------------------------------------------------------------------------------
@@ -226,7 +271,6 @@ JAVASCRIPT
         picker.setLocalDate(today);
         $('#taskCreateModal').modal('show');
     });
-
     $('#taskCreate-confirm').click(function () {
         $('#task-create-message').hide();
         var name = $('#task-create-name').val();
@@ -245,7 +289,6 @@ JAVASCRIPT
         }
         draw_user_tasks();
     });
-
     // ----------------------------------------------------------------------------------------
     // Functions
     // ----------------------------------------------------------------------------------------
@@ -253,15 +296,12 @@ JAVASCRIPT
         var tmp = timestr.split(" ");
         if (tmp.length != 2)
             return false;
-
         var date = tmp[0].split("/");
         if (date.length != 3)
             return false;
-
         var time = tmp[1].split(":");
         if (time.length != 2)
             return false;
-
         return new Date(date[2], date[1] - 1, date[0], time[0], time[1], 0).getTime() / 1000;
     }
 
