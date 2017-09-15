@@ -117,7 +117,7 @@ class Task {
     public function runScheduledTasks() {
         $enabled_tasks = $this->getEnabledTasks();
         foreach ($enabled_tasks as $task) {
-            if ($task['run_on'] < time() && $task['run_on']  != 0) { // when run_on is 0, it means that it doens't need to be run. run_on is set to 0 when frequency is 0 which means that task should only be run once
+            if ($task['run_on'] < time() && $task['run_on'] != 0) { // when run_on is 0, it means that it doens't need to be run. run_on is set to 0 when frequency is 0 which means that task should only be run once
                 $this->run_task($task);
             }
         }
@@ -154,7 +154,6 @@ class Task {
         $description = preg_replace('/[^\p{N}\p{L}_\s-:]/u', '', $description);
         $tag = preg_replace('/[^\p{N}\p{L}_\s-:]/u', '', $tag);
         $run_on = (preg_replace('/([^0-9])/', '', $run_on));
-        $frequency = (int) $frequency;
         $enabled = 0;
 
         if ($this->name_exists($userid, $name) == true)
@@ -174,6 +173,7 @@ class Task {
     public function set_fields($userid, $id, $fields) {
         $userid = (int) $userid;
         $id = (int) $id;
+        $fields = preg_replace('/[^\p{N}\p{L}_\s-:]/u', '', $fields);
         $fields = json_decode(stripslashes($fields));
 
         $array = array();
