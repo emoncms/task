@@ -242,8 +242,8 @@ JAVASCRIPT
                 $('#task-create-message').html('<p>' + result.message + '</p>').show();
             else
                 $('#taskCreateModal').modal('hide');
-
         }
+        draw_user_tasks();
     });
 
     // ----------------------------------------------------------------------------------------
