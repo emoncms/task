@@ -117,7 +117,7 @@ class Task {
     public function runScheduledTasks() {
         $enabled_tasks = $this->getEnabledTasks();
         foreach ($enabled_tasks as $task) {
-            if ($task['run_on'] < time()) {
+            if ($task['run_on'] < time() && $task['run_on']  != 0) { // when run_on is 0, it means that it doens't need to be run. run_on is set to 0 when frequency is 0 which means that task should only be run once
                 $this->run_task($task);
             }
         }
@@ -254,9 +254,11 @@ class Task {
     private function run_task($task) {
         $opt = array('sourcetype' => ProcessOriginType::TASK, 'sourceid' => $task['id']);
         $this->process->input(time(), 0, $task['processList'], $opt);
-        $this->setRunOn($task['id'], time() + $task['frequency']);
+        if ($task['frequency'] == 0) // Task to be run only once
+            $this->setRunOn($task['id'], 0); // when run_on is 0 the task is not run anymore
+        else
+            $this->setRunOn($task['id'], time() + $task['frequency']);
         $this->setLastRun($task['id'], time());
-        echo('/npasado/n');
     }
 
     private function task_exists($id) {

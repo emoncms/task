@@ -50,7 +50,7 @@ MODALS
             <tr><td><?php echo _('Name*'); ?></td><td><input id="task-create-name" type="text" /></td></tr>
             <tr><td><?php echo _('Description'); ?></td><td><input id="task-create-description" type="text" /></td></tr>
             <tr><td><?php echo _('Tag'); ?></td><td><input id="task-create-tag" type="text" /></td></tr>
-            <tr><td><?php echo _('Frequency (seconds)'); ?></td><td><input id="task-create-frequency" type="number" min="1" value="1" /></td></tr>
+            <tr><td><?php echo _("Frequency (seconds)") . " <i title='" . _("When frequency is 0 the task will only be run once") . "' class='icon-question-sign'></i>" ?></td><td><input id="task-create-frequency" type="number" min="1" value="1" /></td></tr>
             <tr><td><?php echo _('Start date'); ?></td><td><div class="input-append date" id="task-create-run-on" data-format="dd/MM/yyyy hh:mm"><input data-format="dd/MM/yyyy hh:mm" type="text" /><span class="add-on"> <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i></span></div></td></tr>
         </table>
         <div id="task-create-message" class="alert alert-block hide"></div>
@@ -127,7 +127,7 @@ JAVASCRIPT
             'name': {'title': '<?php echo _("Name"); ?>', 'type': "text"},
             'description': {'title': '<?php echo _("Description"); ?>', 'type': "text"},
             'processList': {'title': '<?php echo _("Process list"); ?>', 'type': "processlist"},
-            'frequency': {'title': "<?php echo _('Frequency'); ?>", 'type': "text"},
+            'frequency': {'title': "<?php echo _("Frequency") . " <i title='" . _("When frequency is 0 the task will only be run once (no new Run On time will be set)") . "' class='icon-question-sign'></i>" ?>", 'type': "text"},
             'enabled': {'title': "<?php echo _('Enabled'); ?>", 'type': "icon", 'trueicon': "icon-ok", 'falseicon': "icon-remove"},
             'time': {'title': "<?php echo _('Last run'); ?>", 'type': "date"},
             'run_on': {'title': "<?php echo _('Next run'); ?>", 'type': "date"},
