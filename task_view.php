@@ -7,6 +7,7 @@ $fullwidth = true;
 <script language="javascript" type="text/javascript" src="<?php echo $path; ?>Modules/task/task.js"></script>
 <script type="text/javascript" src="<?php echo $path; ?>Lib/tablejs/table.js"></script>
 <script type="text/javascript" src="<?php echo $path; ?>Lib/tablejs/custom-table-fields.js"></script>
+<script type="text/javascript" src="<?php echo $path; ?>Modules/task/task-custom-table-fields.js"></script>
 <link href="<?php echo $path; ?>Lib/bootstrap-datetimepicker-0.0.11/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
 <script type="text/javascript" src="<?php echo $path; ?>Lib/bootstrap-datetimepicker-0.0.11/js/bootstrap-datetimepicker.min.js"></script>
 
@@ -85,51 +86,14 @@ JAVASCRIPT
     var path = "<?php echo $path; ?>";
     var userid = <?php echo $session["userid"]; ?>;
     var group_support = false;
+    
     // Extend table library field types with customtablefields
     for (z in customtablefields)
         table.fieldtypes[z] = customtablefields[z];
-    // Extend table with a new field type for frecuency
-    var frequency_field_type = {
-        'draw': function (t, row, child_row, field) {
-            var frequency = JSON.parse(t.data[row][field]);
-            if (frequency.type == 'one_time')
-                var string = '<?php echo _('One time') ?>';
-            if (frequency.type == 'once_a_month')
-                var string = '<?php echo _('Once a month') ?>';
-            if (frequency.type == 'number_of') {
-                var string = '';
-                var first = true;
-                if (frequency.weeks != 0) {
-                    string += frequency.weeks + ' <?php echo _('weeks') ?>';
-                    first = false;
-                }
-                if (frequency.days != 0) {
-                    string += first === false ? ', ' + frequency.days + ' <?php echo _('days') ?>' : frequency.days + ' <?php echo _('days') ?>';
-                    first = false;
-                }
-                if (frequency.hours != 0) {
-                    string += first === false ? ', ' + frequency.hours + ' <?php echo _('hours') ?>' : frequency.hours + ' <?php echo _('hours') ?>';
-                    first = false;
-                }
-                if (frequency.minutes != 0) {
-                    string += first === false ? ', ' + frequency.minutes + ' <?php echo _('minutes') ?>' : frequency.minutes + ' <?php echo _('minutes') ?>';
-                    first = false;
-                }
-                if (frequency.seconds != 0) {
-                    string += first === false ? ', ' + frequency.seconds + ' <?php echo _('seconds') ?>' : frequency.seconds + ' <?php echo _('seconds') ?>';
-                }
-            }
-            return string;
-        },
-        'edit': function (t, row, child_row, field) { /// Here aqui todo
-            var frequency = JSON.parse(t.data[row][field]);
-            return get_frequency_html(frequency);
-        },
-        'save': function (t, row, child_row, field) {
-            return get_frequency_field("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "']");
-        }
-    };
-    table.fieldtypes.frequency = frequency_field_type;
+    
+    // Extend table with a new fields specific to the task module
+    for (z in taskcustomtablefields)
+        table.fieldtypes[z] = taskcustomtablefields[z];
 
     draw_user_tasks();
     if (group_support === false)
@@ -294,65 +258,5 @@ JAVASCRIPT
     // ----------------------------------------------------------------------------------------
     // Functions
     // ----------------------------------------------------------------------------------------
-    function parse_timepicker_time(timestr) {
-        var tmp = timestr.split(" ");
-        if (tmp.length != 2)
-            return false;
-        var date = tmp[0].split("/");
-        if (date.length != 3)
-            return false;
-        var time = tmp[1].split(":");
-        if (time.length != 2)
-            return false;
-        return new Date(date[2], date[1] - 1, date[0], time[0], time[1], 0).getTime() / 1000;
-    }
-
-    function get_frequency_html(frequency) {
-        console.log(frequency)
-        var str = "<input name='frequency-type' type='radio' value='one_time' ";
-        str += frequency.type == "one_time" ? "checked" : "";
-        str += "> <?php echo _('Only once') ?></input></br>";
-
-        str += "<input name='frequency-type' type='radio' value='once_a_month' ";
-        str += frequency.type == "once_a_month" ? "checked" : "";
-        str += "> <?php echo _('Once a month') ?></input></br>";
-
-        str += "<input name='frequency-type' type='radio' value='number_of' ";
-        str += frequency.type == "number_of" ? "checked" : "";
-        str += "> <?php echo _('Number of...') ?></input>";
-
-        str += "<table class='";
-        str += frequency.type !== "number_of" ? "hide" : "";
-        ;
-        str += "'><tr><td>Weeks</td><td><input id='frequency-weeks' type='number' min='0' value='" + frequency.weeks + "' style='width:45px' /></td></tr>";
-        str += "<tr><td>Days</td><td><input id='frequency-days' type='number' min='0' value='" + frequency.days + "' style='width:45px' /></td></tr>";
-        str += "<tr><td>Hours</td><td><input id='frequency-hours' type='number' min='0' value='" + frequency.hours + "' style='width:45px' /></td></tr>";
-        str += "<tr><td>Minutes</td><td><input id='frequency-minutes' type='number' min='0' value='" + frequency.minutes + "' style='width:45px' /></td></tr>";
-        str += "<tr><td>Seconds</td><td><input id='frequency-seconds' type='number' min='0' value='" + frequency.seconds + "' style='width:45px' /></td></tr></table>";
-
-        return str;
-    }
-
-    function add_frequency_html_events() {
-        $('[name="frequency-type"').change(function () {
-            var type = $('[name="frequency-type"]:checked').val();
-            if (type == 'number_of')
-                $(this).siblings('table').show();
-            else
-                $(this).siblings('table').hide();
-        });
-    }
-
-    function get_frequency_field(selector) {
-        var frequency = {};
-        frequency.type = $(selector + " [name='frequency-type']:checked").val();
-        if (frequency.type == 'number_of') {
-            frequency.weeks = $(selector + " #frequency-weeks").val();
-            frequency.days = $(selector + " #frequency-days").val();
-            frequency.hours = $(selector + " #frequency-hours").val();
-            frequency.minutes = $(selector + " #frequency-minutes").val();
-            frequency.seconds = $(selector + " #frequency-seconds").val();
-        }
-        return JSON.stringify(frequency);
-    }
+    
 </script>
