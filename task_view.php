@@ -51,7 +51,7 @@ MODALS
             <tr><td><?php echo _('Name*'); ?></td><td><input id="task-create-name" type="text" /></td></tr>
             <tr><td><?php echo _('Description'); ?></td><td><input id="task-create-description" type="text" /></td></tr>
             <tr><td><?php echo _('Tag'); ?></td><td><input id="task-create-tag" type="text" /></td></tr>
-            <tr><td><?php echo _("Frequency (seconds)") . " <i title='" . _("When frequency is 0 the task will only be run once") . "' class='icon-question-sign'></i>" ?></td><td><input id="task-create-frequency" type="number" min="1" value="1" /></td></tr>
+            <tr><td><?php echo _('Frequency'); ?></td><td id="task-create-frequency"></td></tr>
             <tr><td><?php echo _('Start date'); ?></td><td><div class="input-append date" id="task-create-run-on" data-format="dd/MM/yyyy hh:mm"><input data-format="dd/MM/yyyy hh:mm" type="text" /><span class="add-on"> <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i></span></div></td></tr>
         </table>
         <div id="task-create-message" class="alert alert-block hide"></div>
@@ -126,19 +126,8 @@ JAVASCRIPT
             return get_frequency_html(frequency);
         },
         'save': function (t, row, child_row, field) {
-            var frequency = {};
-            frequency.type = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] [name='frequency-type']:checked").val();
-            ;
-            if (frequency.type == 'number_of') {
-                frequency.weeks = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] #frequency-weeks").val();
-                frequency.days = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] #frequency-days").val();
-                frequency.hours = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] #frequency-hours").val();
-                frequency.minutes = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] #frequency-minutes").val();
-                frequency.seconds = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] #frequency-seconds").val();
-            }
-            return JSON.stringify(frequency);
+            return get_frequency_field("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "']");
         }
-
     };
     table.fieldtypes.frequency = frequency_field_type;
 
@@ -206,13 +195,7 @@ JAVASCRIPT
             $('.date').each(function (index) {
                 $(this).datetimepicker({language: 'en-EN'});
             });
-            $('[name="frequency-type"').change(function () {
-                var type = $('[name="frequency-type"]:checked').val();
-                if (type == 'number_of')
-                    $(this).siblings('table').show();
-                else
-                    $(this).siblings('table').hide();
-            });
+            add_frequency_html_events();
         }, 100);
     });
     $("#user-tasks-table").bind("onSave", function (e, id, fields_to_update) {
@@ -273,12 +256,21 @@ JAVASCRIPT
     // Actions
     // ----------------------------------------------------------------------------------------
     $('#create-task').click(function () {
-        $('#task-create-message').hide();
+        // Frequency field
+        $('#task-create-frequency').html(get_frequency_html({type: 'once_a_month'}));
+        add_frequency_html_events();
+        // Start date field
         $('#task-create-run-on').datetimepicker({language: 'en-EN', useCurrent: true});
         var now = new Date();
         var today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes());
         var picker = $('#task-create-run-on').data('datetimepicker');
         picker.setLocalDate(today);
+        // Reset fields        
+        $('#task-create-message').hide();
+        $('#task-create-name').val('');
+        $('#task-create-description').val('');
+        $('#task-create-tag').val('');
+        $('#task-create-frequency [value="once_a_month"]').click();
         $('#taskCreateModal').modal('show');
     });
     $('#taskCreate-confirm').click(function () {
@@ -289,7 +281,7 @@ JAVASCRIPT
         else {
             var description = $('#task-create-name').val();
             var tag = $('#task-create-tag').val();
-            var frequency = $('#task-create-frequency').val();
+            var frequency = get_frequency_field('#task-create-frequency');
             var run_on = parse_timepicker_time($('#task-create-run-on input').val());
             var result = task.createTask(name, description, tag, frequency, run_on);
             if (result.success == false)
@@ -339,7 +331,28 @@ JAVASCRIPT
         str += "<tr><td>Seconds</td><td><input id='frequency-seconds' type='number' min='0' value='" + frequency.seconds + "' style='width:45px' /></td></tr></table>";
 
         return str;
-
     }
 
+    function add_frequency_html_events() {
+        $('[name="frequency-type"').change(function () {
+            var type = $('[name="frequency-type"]:checked').val();
+            if (type == 'number_of')
+                $(this).siblings('table').show();
+            else
+                $(this).siblings('table').hide();
+        });
+    }
+
+    function get_frequency_field(selector) {
+        var frequency = {};
+        frequency.type = $(selector + " [name='frequency-type']:checked").val();
+        if (frequency.type == 'number_of') {
+            frequency.weeks = $(selector + " #frequency-weeks").val();
+            frequency.days = $(selector + " #frequency-days").val();
+            frequency.hours = $(selector + " #frequency-hours").val();
+            frequency.minutes = $(selector + " #frequency-minutes").val();
+            frequency.seconds = $(selector + " #frequency-seconds").val();
+        }
+        return JSON.stringify(frequency);
+    }
 </script>
