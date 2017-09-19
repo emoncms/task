@@ -51,7 +51,7 @@ var taskcustomtablefields = {
         'draw': function (t, row, child_row, field) {
             var date = new Date();
             date.setTime(1000 * t.data[row][field]); //from seconds to miliseconds
-            return (date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + date.getHours() + ':' + date.getMinutes());
+            return (date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + (date.getHours() < 10 ? '0' : '') + date.getHours() + ':' + (date.getMinutes() < 10 ? '0' : '') + date.getMinutes());
         },
         'edit': function (t, row, child_row, field) {
             var date = new Date();
@@ -71,7 +71,7 @@ var taskcustomtablefields = {
         'draw': function (t, row, child_row, field) {
             var date = new Date();
             date.setTime(1000 * t.data[row][field]); //from seconds to miliseconds
-            return (date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + date.getHours() + ':' + date.getMinutes());
+            return (date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + (date.getHours() < 10 ? '0' : '') + date.getHours() + ':' + (date.getMinutes() < 10 ? '0' : '') + date.getMinutes());
         }
     },
     'run_task': {

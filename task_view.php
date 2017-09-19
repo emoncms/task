@@ -86,11 +86,11 @@ JAVASCRIPT
     var path = "<?php echo $path; ?>";
     var userid = <?php echo $session["userid"]; ?>;
     var group_support = false;
-    
+
     // Extend table library field types with customtablefields
     for (z in customtablefields)
         table.fieldtypes[z] = customtablefields[z];
-    
+
     // Extend table with a new fields specific to the task module
     for (z in taskcustomtablefields)
         table.fieldtypes[z] = taskcustomtablefields[z];
@@ -159,7 +159,7 @@ JAVASCRIPT
 
         setTimeout(function () { // The onEdit event is triggered before adding the html of the field, we need to wait until the html there before we can add the datetimepicker and events
             $('.date').each(function (index) {
-                $(this).datetimepicker({language: 'en-EN'});
+                $(this).datetimepicker({language: 'en-EN', weekStart: 1});
             });
             add_frequency_html_events();
         }, 100);
@@ -208,12 +208,12 @@ JAVASCRIPT
     $("#user-tasks-table").bind("onDraw", function (e, id, row) {
         // Replace dates that are 0 with the relevant information
         $('[field="time"]').each(function () { // Last run
-            if ($(this).html() === "1/1/1970 0:0") {
+            if ($(this).html() === "1/1/1970 00:00") {
                 $(this).html("Never");
             }
         });
         $('[field="run_on"]').each(function () { // When frequency is 0 it means that task is only run once (on the start date). When this is the case run_on is set to 0 (1/1/1970 0:0)
-            if ($(this).html() === "1/1/1970 0:0") {
+            if ($(this).html() === "1/1/1970 00:00") {
                 $(this).html("Never");
             }
         });
@@ -226,7 +226,7 @@ JAVASCRIPT
         $('#task-create-frequency').html(get_frequency_html({type: 'once_a_month'}));
         add_frequency_html_events();
         // Start date field
-        $('#task-create-run-on').datetimepicker({language: 'en-EN', useCurrent: true});
+        $('#task-create-run-on').datetimepicker({language: 'en-EN', useCurrent: true, weekStart: 1});
         var now = new Date();
         var today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes());
         var picker = $('#task-create-run-on').data('datetimepicker');
