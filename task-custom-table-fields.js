@@ -73,7 +73,21 @@ var taskcustomtablefields = {
             date.setTime(1000 * t.data[row][field]); //from seconds to miliseconds
             return (date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + date.getHours() + ':' + date.getMinutes());
         }
+    },
+    'run_task': {
+        'draw': function (t, row, child_row, field) {
+            return '<button type="run_task" class="btn" title="Runnig the task will trigger the Process List even if the task is not enabled and will not set a new Next Run">Run</button>';
+        },
+        'event': function () {
+            $(table.element).on('click', '[type="run_task"]', function () {
+                var t = table;
+                var row = $(this).parent().attr('row');
+                var result = task.runTask(t.data[row].id);
+                draw_user_tasks();
+            });
+        }
     }
+
 };
 
 
@@ -96,50 +110,50 @@ function parse_timepicker_time(timestr) {
 
 // Frequency field functions
 function get_frequency_html(frequency) {
-        console.log(frequency)
-        var str = "<input name='frequency-type' type='radio' value='one_time' ";
-        str += frequency.type == "one_time" ? "checked" : "";
-        str += "> Only once</input></br>";
+    console.log(frequency)
+    var str = "<input name='frequency-type' type='radio' value='one_time' ";
+    str += frequency.type == "one_time" ? "checked" : "";
+    str += "> Only once</input></br>";
 
-        str += "<input name='frequency-type' type='radio' value='once_a_month' ";
-        str += frequency.type == "once_a_month" ? "checked" : "";
-        str += "> Once a month</input></br>";
+    str += "<input name='frequency-type' type='radio' value='once_a_month' ";
+    str += frequency.type == "once_a_month" ? "checked" : "";
+    str += "> Once a month</input></br>";
 
-        str += "<input name='frequency-type' type='radio' value='number_of' ";
-        str += frequency.type == "number_of" ? "checked" : "";
-        str += "> Number of...</input>";
+    str += "<input name='frequency-type' type='radio' value='number_of' ";
+    str += frequency.type == "number_of" ? "checked" : "";
+    str += "> Number of...</input>";
 
-        str += "<table style='margin-top:15px' class='table ";
-        str += frequency.type !== "number_of" ? "hide'" : "'";
-        ;
-        str += "'><tr><td>Weeks</td><td><input id='frequency-weeks' type='number' min='0' value='" + frequency.weeks + "' style='width:45px' /></td></tr>";
-        str += "<tr><td>Days</td><td><input id='frequency-days' type='number' min='0' value='" + frequency.days + "' style='width:45px' /></td></tr>";
-        str += "<tr><td>Hours</td><td><input id='frequency-hours' type='number' min='0' value='" + frequency.hours + "' style='width:45px' /></td></tr>";
-        str += "<tr><td>Minutes</td><td><input id='frequency-minutes' type='number' min='0' value='" + frequency.minutes + "' style='width:45px' /></td></tr>";
-        str += "<tr><td>Seconds</td><td><input id='frequency-seconds' type='number' min='0' value='" + frequency.seconds + "' style='width:45px' /></td></tr></table>";
+    str += "<table style='margin-top:15px' class='table ";
+    str += frequency.type !== "number_of" ? "hide'" : "'";
+    ;
+    str += "'><tr><td>Weeks</td><td><input id='frequency-weeks' type='number' min='0' value='" + frequency.weeks + "' style='width:45px' /></td></tr>";
+    str += "<tr><td>Days</td><td><input id='frequency-days' type='number' min='0' value='" + frequency.days + "' style='width:45px' /></td></tr>";
+    str += "<tr><td>Hours</td><td><input id='frequency-hours' type='number' min='0' value='" + frequency.hours + "' style='width:45px' /></td></tr>";
+    str += "<tr><td>Minutes</td><td><input id='frequency-minutes' type='number' min='0' value='" + frequency.minutes + "' style='width:45px' /></td></tr>";
+    str += "<tr><td>Seconds</td><td><input id='frequency-seconds' type='number' min='0' value='" + frequency.seconds + "' style='width:45px' /></td></tr></table>";
 
-        return str;
+    return str;
+}
+
+function add_frequency_html_events() {
+    $('[name="frequency-type"').change(function () {
+        var type = $('[name="frequency-type"]:checked').val();
+        if (type == 'number_of')
+            $(this).siblings('table').show();
+        else
+            $(this).siblings('table').hide();
+    });
+}
+
+function get_frequency_field(selector) {
+    var frequency = {};
+    frequency.type = $(selector + " [name='frequency-type']:checked").val();
+    if (frequency.type == 'number_of') {
+        frequency.weeks = $(selector + " #frequency-weeks").val();
+        frequency.days = $(selector + " #frequency-days").val();
+        frequency.hours = $(selector + " #frequency-hours").val();
+        frequency.minutes = $(selector + " #frequency-minutes").val();
+        frequency.seconds = $(selector + " #frequency-seconds").val();
     }
-
-    function add_frequency_html_events() {
-        $('[name="frequency-type"').change(function () {
-            var type = $('[name="frequency-type"]:checked').val();
-            if (type == 'number_of')
-                $(this).siblings('table').show();
-            else
-                $(this).siblings('table').hide();
-        });
-    }
-
-    function get_frequency_field(selector) {
-        var frequency = {};
-        frequency.type = $(selector + " [name='frequency-type']:checked").val();
-        if (frequency.type == 'number_of') {
-            frequency.weeks = $(selector + " #frequency-weeks").val();
-            frequency.days = $(selector + " #frequency-days").val();
-            frequency.hours = $(selector + " #frequency-hours").val();
-            frequency.minutes = $(selector + " #frequency-minutes").val();
-            frequency.seconds = $(selector + " #frequency-seconds").val();
-        }
-        return JSON.stringify(frequency);
-    }
+    return JSON.stringify(frequency);
+}

@@ -59,6 +59,10 @@ function task_controller() {
             $route->format = "json";
             $result = $task->create_task($session['userid'], get('name'), get('description'), get('tag'), get('frequency'), get('run_on'));
         }
+        if ($route->action == 'runusertask') {
+            $route->format = "json";
+            $result = $task->run_user_task($session['userid'], get('id'));
+        }
     }
     if ($session['read']) {
         if ($route->action == "getusertasks") {

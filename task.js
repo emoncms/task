@@ -35,5 +35,13 @@ var task = {
             }});
         return result;
     },
+    'runTask': function (taskid) {
+        var result = {};
+        $.ajax({url: path + "task/runusertask.json?id=" + taskid, async: false, complete: function (data) {
+                result = data;
+                console.log(result.responseText)
+            }});
+        return result;
+    },
 };
 

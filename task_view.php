@@ -125,7 +125,8 @@ JAVASCRIPT
             'dummy-6': {'title': '', 'type': "blank"},
             'dummy-7': {'title': '', 'type': "blank"},
             'dummy-8': {'title': '', 'type': "blank"},
-            'dummy-9': {'title': '', 'type': "blank"}
+            'dummy-9': {'title': '', 'type': "blank"},
+            'dummy-10': {'title': '', 'type': "blank"}
         };
         table.fields = {
             'id': {'title': "<?php echo _('Id'); ?>", 'type': "fixed"},
@@ -140,7 +141,8 @@ JAVASCRIPT
             // Actions
             'edit-action': {'title': '', 'type': "edit"},
             'delete-action': {'title': '', 'type': "delete"},
-            'processlist-action': {'title': '', 'type': "iconbasic", 'icon': 'icon-wrench'}
+            'processlist-action': {'title': '', 'type': "iconbasic", 'icon': 'icon-wrench'},
+            'run_task': {'title': '', 'type': "run_task"},
         }
 
         table.data = user_tasks;
@@ -258,5 +260,5 @@ JAVASCRIPT
     // ----------------------------------------------------------------------------------------
     // Functions
     // ----------------------------------------------------------------------------------------
-    
+    $('#user-tasks-table > tbody:nth-child(1) > tr > th:nth-child(1) > a').click();
 </script>

@@ -254,6 +254,13 @@ class Task {
 //--------------------------
 //  Other methods    
 //--------------------------
+    public function run_user_task($userid, $taskid) {
+        $taskid = (int) $taskid;
+        $userid = (int) $userid;
+        $task = $this->get_task($userid, $taskid);
+        $this->run_task($task);
+    }
+
     private function run_task($task) {
         $opt = array('sourcetype' => ProcessOriginType::TASK, 'sourceid' => $task['id']);
         $this->process->input(time(), 0, $task['processList'], $opt);
