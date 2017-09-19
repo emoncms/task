@@ -92,49 +92,50 @@ JAVASCRIPT
     var frequency_field_type = {
         'draw': function (t, row, child_row, field) {
             var frequency = JSON.parse(t.data[row][field]);
-            if (frequency.type == 'time') {
+            if (frequency.type == 'one_time')
+                var string = '<?php echo _('One time') ?>';
+            if (frequency.type == 'once_a_month')
+                var string = '<?php echo _('Once a month') ?>';
+            if (frequency.type == 'number_of') {
                 var string = '';
                 var first = true;
                 if (frequency.weeks != 0) {
-                    string += frequency.weeks + ' weeks';
+                    string += frequency.weeks + ' <?php echo _('weeks') ?>';
                     first = false;
                 }
                 if (frequency.days != 0) {
-                    string += first === false ? ', ' + frequency.days + ' days' : frequency.days + ' days';
+                    string += first === false ? ', ' + frequency.days + ' <?php echo _('days') ?>' : frequency.days + ' <?php echo _('days') ?>';
                     first = false;
                 }
                 if (frequency.hours != 0) {
-                    string += first === false ? ', ' + frequency.hours + ' hours' : frequency.hours + ' hours';
+                    string += first === false ? ', ' + frequency.hours + ' <?php echo _('hours') ?>' : frequency.hours + ' <?php echo _('hours') ?>';
                     first = false;
                 }
                 if (frequency.minutes != 0) {
-                    string += first === false ? ', ' + frequency.minutes + ' minutes' : frequency.minutes + ' minutes';
+                    string += first === false ? ', ' + frequency.minutes + ' <?php echo _('minutes') ?>' : frequency.minutes + ' <?php echo _('minutes') ?>';
                     first = false;
                 }
                 if (frequency.seconds != 0) {
-                    string += first === false ? ', ' + frequency.seconds + ' seconds' : frequency.seconds + ' seconds';
+                    string += first === false ? ', ' + frequency.seconds + ' <?php echo _('seconds') ?>' : frequency.seconds + ' <?php echo _('seconds') ?>';
                 }
             }
             return string;
         },
-        'edit': function (t, row, child_row, field) {
+        'edit': function (t, row, child_row, field) { /// Here aqui todo
             var frequency = JSON.parse(t.data[row][field]);
-            var str = "<table><tr><td>Weeks</td><td><input id='frequency-weeks' type='number' min='0' value='" + frequency.weeks + "' style='width:45px' /></td></tr>";
-            str += "<tr><td>Days</td><td><input id='frequency-days' type='number' min='0' value='" + frequency.days + "' style='width:45px' /></td></tr>";
-            str += "<tr><td>Hours</td><td><input id='frequency-hours' type='number' min='0' value='" + frequency.hours + "' style='width:45px' /></td></tr>";
-            str += "<tr><td>Minutes</td><td><input id='frequency-minutes' type='number' min='0' value='" + frequency.minutes + "' style='width:45px' /></td></tr>";
-            str += "<tr><td>Seconds</td><td><input id='frequency-seconds' type='number' min='0' value='" + frequency.seconds + "' style='width:45px' /></td></tr></table>";
-            return str;
+            return get_frequency_html(frequency);
         },
         'save': function (t, row, child_row, field) {
             var frequency = {};
-            frequency.type = 'time';
-            frequency.weeks = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] #frequency-weeks").val();
-            frequency.days = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] #frequency-days").val();
-            frequency.hours = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] #frequency-hours").val();
-            frequency.minutes = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] #frequency-minutes").val();
-            frequency.seconds = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] #frequency-seconds").val();
-            console.log(frequency)
+            frequency.type = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] [name='frequency-type']:checked").val();
+            ;
+            if (frequency.type == 'number_of') {
+                frequency.weeks = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] #frequency-weeks").val();
+                frequency.days = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] #frequency-days").val();
+                frequency.hours = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] #frequency-hours").val();
+                frequency.minutes = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] #frequency-minutes").val();
+                frequency.seconds = $("[row='" + row + "'][child_row='" + child_row + "'][field='" + field + "'] #frequency-seconds").val();
+            }
             return JSON.stringify(frequency);
         }
 
@@ -200,13 +201,22 @@ JAVASCRIPT
     // Table actions
     //------------------------------------
     $("#user-tasks-table").bind("onEdit", function (e) {
-        setTimeout(function () { // The onEdit event is triggered before adding the html of the field, we need to wait until the html there before we can add the datetimepicker
+
+        setTimeout(function () { // The onEdit event is triggered before adding the html of the field, we need to wait until the html there before we can add the datetimepicker and events
             $('.date').each(function (index) {
                 $(this).datetimepicker({language: 'en-EN'});
+            });
+            $('[name="frequency-type"').change(function () {
+                var type = $('[name="frequency-type"]:checked').val();
+                if (type == 'number_of')
+                    $(this).siblings('table').show();
+                else
+                    $(this).siblings('table').hide();
             });
         }, 100);
     });
     $("#user-tasks-table").bind("onSave", function (e, id, fields_to_update) {
+        console.log(fields_to_update)
         if (fields_to_update.frequency != undefined)
             fields_to_update.frequency = JSON.parse(fields_to_update.frequency); // frequency is a string, when we call task.setTask it stringfys all the fields, if we don't parse it now the final strinng is corrupted JSON 
         task.setTask(id, fields_to_update);
@@ -303,6 +313,33 @@ JAVASCRIPT
         if (time.length != 2)
             return false;
         return new Date(date[2], date[1] - 1, date[0], time[0], time[1], 0).getTime() / 1000;
+    }
+
+    function get_frequency_html(frequency) {
+        console.log(frequency)
+        var str = "<input name='frequency-type' type='radio' value='one_time' ";
+        str += frequency.type == "one_time" ? "checked" : "";
+        str += "> <?php echo _('Only once') ?></input></br>";
+
+        str += "<input name='frequency-type' type='radio' value='once_a_month' ";
+        str += frequency.type == "once_a_month" ? "checked" : "";
+        str += "> <?php echo _('Once a month') ?></input></br>";
+
+        str += "<input name='frequency-type' type='radio' value='number_of' ";
+        str += frequency.type == "number_of" ? "checked" : "";
+        str += "> <?php echo _('Number of...') ?></input>";
+
+        str += "<table class='";
+        str += frequency.type !== "number_of" ? "hide" : "";
+        ;
+        str += "'><tr><td>Weeks</td><td><input id='frequency-weeks' type='number' min='0' value='" + frequency.weeks + "' style='width:45px' /></td></tr>";
+        str += "<tr><td>Days</td><td><input id='frequency-days' type='number' min='0' value='" + frequency.days + "' style='width:45px' /></td></tr>";
+        str += "<tr><td>Hours</td><td><input id='frequency-hours' type='number' min='0' value='" + frequency.hours + "' style='width:45px' /></td></tr>";
+        str += "<tr><td>Minutes</td><td><input id='frequency-minutes' type='number' min='0' value='" + frequency.minutes + "' style='width:45px' /></td></tr>";
+        str += "<tr><td>Seconds</td><td><input id='frequency-seconds' type='number' min='0' value='" + frequency.seconds + "' style='width:45px' /></td></tr></table>";
+
+        return str;
+
     }
 
 </script>

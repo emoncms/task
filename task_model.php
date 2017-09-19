@@ -34,9 +34,9 @@ class Task {
         $this->process = $process;
     }
 
-    //--------------------------
-    // Get Tasks
-    //--------------------------
+//--------------------------
+// Get Tasks
+//--------------------------
     public function get_tasks($userid) {
         $userid = (int) $userid;
 
@@ -111,9 +111,9 @@ class Task {
             return false;
     }
 
-    //--------------------------
-    // Run Tasks that are due
-    //--------------------------
+//--------------------------
+// Run Tasks that are due
+//--------------------------
     public function runScheduledTasks() {
         $enabled_tasks = $this->getEnabledTasks();
         foreach ($enabled_tasks as $task) {
@@ -145,9 +145,9 @@ class Task {
         return $array_of_tasks;
     }
 
-    //--------------------------
-    //  Save Tasks
-    //--------------------------
+//--------------------------
+//  Save Tasks
+//--------------------------
     public function create_task($userid, $name, $description, $tag, $frequency, $run_on) {
         $userid = (int) $userid;
         $name = preg_replace('/[^\p{N}\p{L}_\s-:]/u', '', $name);
@@ -178,7 +178,7 @@ class Task {
 
         $array = array();
 
-        // Repeat this line changing the field name to add fields that can be updated:
+// Repeat this line changing the field name to add fields that can be updated:
         if (isset($fields->description))
             $array[] = "`description` = '" . preg_replace('/[^\p{L}_\p{N}\s-]/u', '', $fields->description) . "'";
         if (isset($fields->name))
@@ -197,12 +197,12 @@ class Task {
         if (isset($fields->time))
             $array[] = "`time` = '" . preg_replace('/([^0-9])/', '', $fields->time) . "'";
 
-        // Convert to a comma seperated string for the mysql query
+// Convert to a comma seperated string for the mysql query
         $fieldstr = implode(",", $array);
         $this->mysqli->query("UPDATE tasks SET " . $fieldstr . " WHERE `id` = '$id' AND `userid` = '$userid'");
 
-        // CHECK REDIS?
-        // UPDATE REDIS
+// CHECK REDIS?
+// UPDATE REDIS
         /* if (isset($fields->name) && $this->redis)
           $this->redis->hset("input:$id", 'name', $fields->name);
           if (isset($fields->description) && $this->redis)
@@ -222,8 +222,8 @@ class Task {
 
         $this->mysqli->query("UPDATE tasks SET processList = '$processlist' WHERE id='$id' AND userid='$userid'");
         if ($this->mysqli->affected_rows > 0) {
-            // CHECK REDIS
-            //if ($this->redis) $this->redis->hset("feed:$id",'processList',$processlist);
+// CHECK REDIS
+//if ($this->redis) $this->redis->hset("feed:$id",'processList',$processlist);
             return array('success' => true, 'message' => 'Task processlist updated');
         }
         else {
@@ -231,9 +231,9 @@ class Task {
         }
     }
 
-    //--------------------------
-    //  Delete Tasks
-    //--------------------------
+//--------------------------
+//  Delete Tasks
+//--------------------------
     public function delete_task($userid, $id) {
         $id = (int) $id;
         $userid = (int) $userid;
@@ -251,27 +251,44 @@ class Task {
         }
     }
 
-    //--------------------------
-    //  Other methods    
-    //--------------------------
+//--------------------------
+//  Other methods    
+//--------------------------
     private function run_task($task) {
         $opt = array('sourcetype' => ProcessOriginType::TASK, 'sourceid' => $task['id']);
         $this->process->input(time(), 0, $task['processList'], $opt);
         $frequency = json_decode($task['frequency']);
-        if ($frequency->type == 'time') {
+        if ($frequency->type == 'number_of') {
             $seconds = 7 * 24 * 3600 * $frequency->weeks;
             $seconds += 24 * 3600 * $frequency->days;
             $seconds += 3600 * $frequency->hours;
             $seconds += 60 * $frequency->minutes;
             $seconds += $frequency->seconds;
-        }
-
-        echo var_dump($seconds);
-        if ($frequency->type == 'once') // Task to be run only once
-            $this->setRunOn($task['id'], 0); // when run_on is 0 the task is not run anymore
-        else
             $this->setRunOn($task['id'], time() + $seconds);
-        $this->setLastRun($task['id'], time());
+        }
+        elseif ($frequency->type == 'one_time') // Task to be run only once
+            $this->setRunOn($task['id'], 0); // when run_on is 0 the task is not run anymore
+        elseif ($frequency->type == 'once_a_month') { // Task to be run the same day of the month, if the next month hasn't got that day (ie 30th of Feb) then we skip that month
+            $current_date = time();
+            $current_day = date('d', $current_date);
+            $current_month = date('m', $current_date);
+            $current_year = date('y', $current_date);
+            $original_day = $current_day;
+            do {
+                // If the we're in Dec (12), set current month to Jan (1), add 1 to year.
+                if ($current_month == 12) {
+                    $current_month = 1;
+                    $current_year = $current_year + 1;
+                    $next_run_on = mktime(0, 0, 0, 1, $current_day, $current_year);
+                }
+                // Otherwise, add a month to the next month and calculate the date.
+                else {
+                    $current_month = $current_month + 1;
+                    $next_run_on = mktime(0, 0, 0, $current_month, $current_day, $current_year);
+                }
+            } while (date('d', $next_run_on) != $current_day);
+            $this->setRunOn($task['id'], $next_run_on);
+        }
     }
 
     private function task_exists($id) {
