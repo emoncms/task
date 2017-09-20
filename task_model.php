@@ -258,44 +258,47 @@ class Task {
         $taskid = (int) $taskid;
         $userid = (int) $userid;
         $task = $this->get_task($userid, $taskid);
-        $this->run_task($task);
+        $this->run_task($task, $update_next_run = false);
     }
 
-    private function run_task($task) {
+    private function run_task($task, $update_next_run = true) {
         $opt = array('sourcetype' => ProcessOriginType::TASK, 'sourceid' => $task['id']);
         $this->process->input(time(), 0, $task['processList'], $opt);
-        $frequency = json_decode($task['frequency']);
-        if ($frequency->type == 'number_of') {
-            $seconds = 7 * 24 * 3600 * $frequency->weeks;
-            $seconds += 24 * 3600 * $frequency->days;
-            $seconds += 3600 * $frequency->hours;
-            $seconds += 60 * $frequency->minutes;
-            $seconds += $frequency->seconds;
-            $this->setRunOn($task['id'], time() + $seconds);
+        if ($update_next_run === true) {
+            $frequency = json_decode($task['frequency']);
+            if ($frequency->type == 'number_of') {
+                $seconds = 7 * 24 * 3600 * $frequency->weeks;
+                $seconds += 24 * 3600 * $frequency->days;
+                $seconds += 3600 * $frequency->hours;
+                $seconds += 60 * $frequency->minutes;
+                $seconds += $frequency->seconds;
+                $this->setRunOn($task['id'], time() + $seconds);
+            }
+            elseif ($frequency->type == 'one_time') // Task to be run only once
+                $this->setRunOn($task['id'], 0); // when run_on is 0 the task is not run anymore
+            elseif ($frequency->type == 'once_a_month') { // Task to be run the same day of the month, if the next month hasn't got that day (ie 30th of Feb) then we skip that month
+                $current_date = time();
+                $current_day = date('d', $current_date);
+                $current_month = date('m', $current_date);
+                $current_year = date('y', $current_date);
+                $original_day = $current_day;
+                do {
+                    // If the we're in Dec (12), set current month to Jan (1), add 1 to year.
+                    if ($current_month == 12) {
+                        $current_month = 1;
+                        $current_year = $current_year + 1;
+                        $next_run_on = mktime(0, 0, 0, 1, $current_day, $current_year);
+                    }
+                    // Otherwise, add a month to the next month and calculate the date.
+                    else {
+                        $current_month = $current_month + 1;
+                        $next_run_on = mktime(0, 0, 0, $current_month, $current_day, $current_year);
+                    }
+                } while (date('d', $next_run_on) != $current_day);
+                $this->setRunOn($task['id'], $next_run_on);
+            }
         }
-        elseif ($frequency->type == 'one_time') // Task to be run only once
-            $this->setRunOn($task['id'], 0); // when run_on is 0 the task is not run anymore
-        elseif ($frequency->type == 'once_a_month') { // Task to be run the same day of the month, if the next month hasn't got that day (ie 30th of Feb) then we skip that month
-            $current_date = time();
-            $current_day = date('d', $current_date);
-            $current_month = date('m', $current_date);
-            $current_year = date('y', $current_date);
-            $original_day = $current_day;
-            do {
-                // If the we're in Dec (12), set current month to Jan (1), add 1 to year.
-                if ($current_month == 12) {
-                    $current_month = 1;
-                    $current_year = $current_year + 1;
-                    $next_run_on = mktime(0, 0, 0, 1, $current_day, $current_year);
-                }
-                // Otherwise, add a month to the next month and calculate the date.
-                else {
-                    $current_month = $current_month + 1;
-                    $next_run_on = mktime(0, 0, 0, $current_month, $current_day, $current_year);
-                }
-            } while (date('d', $next_run_on) != $current_day);
-            $this->setRunOn($task['id'], $next_run_on);
-        }
+        $this->setLastRun($task['id'], time());
     }
 
     private function task_exists($id) {

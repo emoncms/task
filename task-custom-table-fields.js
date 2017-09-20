@@ -76,7 +76,7 @@ var taskcustomtablefields = {
     },
     'run_task': {
         'draw': function (t, row, child_row, field) {
-            return '<button type="run_task" class="btn" title="Runnig the task will trigger the Process List even if the task is not enabled and will not set a new Next Run">Run</button>';
+            return '<button type="run_task" class="btn" title="Running the task will trigger the Process List even if the task is not enabled. Beware it will not set a new Next Run">Run</button>';
         },
         'event': function () {
             $(table.element).on('click', '[type="run_task"]', function () {
