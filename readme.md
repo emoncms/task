@@ -4,6 +4,10 @@
 
 An emonCMS module that allows to create Process Lists that get triggered at specific times (aka Tasks). It consist in an UI accessible through emonCMS and a cron task that run the task that are due.
 
+## Installation
+As any other module: clone this repository in the Modules directory of your emonCMS installation and update database.
+You also need to update your emonCMS from here: [emonCMS task module support](https://github.com/carboncoop/emoncms/tree/task_module_support)
+
 ## Features
 - Create tasks
 - Specify frequency for running the task: only once, once a month or every certain number of weeks, days, hours or minutes
@@ -11,7 +15,7 @@ An emonCMS module that allows to create Process Lists that get triggered at spec
 - Enable/ disable tasks
 - Run a task with one click (even if it is disabled and without updating the Next Run date and time)
 
-##Task Cron setup
+## Task Cron setup
 The aim of the Task Module is to run the tasks automatically when they are enabled and it is the time to do so.
 The script *tasks_cron.php* is the one that runs them. It is intended to be a cron job (Linux) or a scheduled task (Windows) so that the schedule can be run periodically.
 ```

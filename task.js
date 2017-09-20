@@ -37,9 +37,8 @@ var task = {
     },
     'runTask': function (taskid) {
         var result = {};
-        $.ajax({url: path + "task/runusertask.json?id=" + taskid, async: false, complete: function (data) {
+        $.ajax({url: path + "task/runusertask.json?id=" + taskid, async: false, success: function (data) {
                 result = data;
-                console.log(result.responseText)
             }});
         return result;
     },
