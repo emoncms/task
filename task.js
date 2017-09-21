@@ -47,9 +47,8 @@ var task = {
 // ----------------------------------------------------------------------------------------
 // Functions
 // ----------------------------------------------------------------------------------------
-function draw_user_tasks(selector) {
+function draw_user_tasks(selector, user_tasks) {
     $(selector).html('');
-    var user_tasks = task.getUserTasks();
     if (user_tasks.length > 0)
         $('#no-user-tasks').hide();
     else
@@ -106,7 +105,7 @@ function bind_table_events(selector) {
         if (fields_to_update.frequency != undefined)
             fields_to_update.frequency = JSON.parse(fields_to_update.frequency); // frequency is a string, when we call task.setTask it stringfys all the fields, if we don't parse it now the final strinng is corrupted JSON 
         task.setTask(id, fields_to_update);
-        draw_user_tasks(selector);
+        draw_user_tasks(selector, task.getUserTasks());
     });
     $(selector).bind("onDelete", function (e, id, row) {
         $('#taskDeleteModal').modal('show');

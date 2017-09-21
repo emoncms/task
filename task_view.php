@@ -88,8 +88,8 @@ JAVASCRIPT
     var group_support = false;
 
     load_custom_table_fields();
-    draw_user_tasks('#user-tasks-table');
-    
+    draw_user_tasks('#user-tasks-table', task.getUserTasks());
+
     if (group_support === false)
         $('.if-groups-support').hide();
     else {
@@ -135,9 +135,9 @@ JAVASCRIPT
             else
                 $('#taskCreateModal').modal('hide');
         }
-        draw_user_tasks('#user-tasks-table');
+        draw_user_tasks('#user-tasks-table', task.getUserTasks());
     });
-    
+
     // ----------------------------------------------------------------------------------------
     // Functions
     // ----------------------------------------------------------------------------------------

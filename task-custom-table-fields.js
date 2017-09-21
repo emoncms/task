@@ -83,7 +83,7 @@ var taskcustomtablefields = {
                 var t = table;
                 var row = $(this).parent().attr('row');
                 var result = task.runTask(t.data[row].id);
-                draw_user_tasks(table.element);
+                draw_user_tasks(table.element, task.getUserTasks());
             });
         }
     }
