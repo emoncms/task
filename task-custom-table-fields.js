@@ -83,7 +83,7 @@ var taskcustomtablefields = {
                 var t = table;
                 var row = $(this).parent().attr('row');
                 var result = task.runTask(t.data[row].id);
-                draw_user_tasks();
+                draw_user_tasks(table.element);
             });
         }
     }
@@ -110,7 +110,6 @@ function parse_timepicker_time(timestr) {
 
 // Frequency field functions
 function get_frequency_html(frequency) {
-    console.log(frequency)
     var str = "<input name='frequency-type' type='radio' value='one_time' ";
     str += frequency.type == "one_time" ? "checked" : "";
     str += "> Only once</input></br>";
