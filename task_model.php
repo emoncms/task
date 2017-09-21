@@ -217,6 +217,7 @@ class Task {
     }
 
     public function set_processlist($userid, $id, $processlist) {
+        $userid = (int)$userid;
         $id = (int) $id;
         $processlist = preg_replace('/([^0-9:],)/', '', $processlist);
 
