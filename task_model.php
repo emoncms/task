@@ -299,6 +299,7 @@ class Task {
             }
         }
         $this->setLastRun($task['id'], time());
+        return true;
     }
 
     private function task_exists($id) {

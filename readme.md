@@ -6,7 +6,7 @@ An emonCMS module that allows to create Process Lists that get triggered at spec
 
 ## Installation
 As any other module: clone this repository in the Modules directory of your emonCMS installation and update database.
-You also need to update your emonCMS from here: [emonCMS task module support](https://github.com/carboncoop/emoncms/tree/task_module_support)
+You also need to update your emonCMS from here: [emonCMS with Task Module support](https://github.com/carboncoop/emoncms/tree/task_module_support)
 
 ## Features
 - Create tasks
