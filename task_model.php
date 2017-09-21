@@ -70,7 +70,7 @@ class Task {
             return $this->redis_get_task($id, $userid);
         }
         else {
-            return $this->mysql_get_task($id, $userid);
+            return $this->mysql_get_task($userid, $id);
         }
     }
 
