@@ -135,7 +135,7 @@ JAVASCRIPT
         if ($('#task-create-name').val() == '')
             $('#task-create-message').html('<p>Name cannot be empty</p>').show();
         else {
-            var description = $('#task-create-name').val();
+            var description = $('#task-create-description').val();
             var tag = $('#task-create-tag').val();
             var frequency = get_frequency_field('#task-create-frequency');
             var run_on = parse_timepicker_time($('#task-create-run-on input').val());
