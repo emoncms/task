@@ -98,6 +98,16 @@ JAVASCRIPT
     // Process list UI js
     processlist_ui.init(1); // 1 means that contexttype is feeds and virtual feeds (other option is 1 for input)
 
+    // Vheck if we need to expand any tag from URL
+    var a= decodeURIComponent(window.location);
+    var selected_tag = decodeURIComponent(window.location.hash).substring(1);
+    console.log("Selected tag:" + selected_tag)
+    if (selected_tag != "") {
+        setTimeout(function () { // We need some extra time to let processlist_ui.init(1) to finish
+            $('[group="'+selected_tag+'"]')[0].click();
+        }, 100);
+    }
+    
     // ----------------------------------------------------------------------------------------
     // Actions
     // ----------------------------------------------------------------------------------------
