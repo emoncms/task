@@ -14,6 +14,8 @@ You also need to update your emonCMS from here: [emonCMS with Task Module suppor
 - Set Next Run date and time manually
 - Enable/ disable tasks
 - Run a task with one click (even if it is disabled and without updating the Next Run date and time)
+- New process to check when a feed or input was last updated
+- New processes for getting inputid and feedid (should go before any of the processes in the previous bullet)
 
 ## Task Cron setup
 The aim of the Task Module is to run the tasks automatically when they are enabled and it is the time to do so.
@@ -26,8 +28,7 @@ The cron job checks every 1s (or different if $task_cron_frequency defined in se
 
 ## ToDo list
 - Redis support
-- New processes: source_input, get_last_update_time
 
 ## Future developments (who knows when)
-- Add group support: this would allow access to group user's feeds. Useful for calculating aggregation feeds
+- Add group support: this would allow access to group user's feeds. Useful for calculating aggregation feeds (this can currently be done from groups module view)
 
