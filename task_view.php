@@ -96,7 +96,7 @@ JAVASCRIPT
 //
     }
     // Process list UI js
-    processlist_ui.init(1); // 1 means that contexttype is feeds and virtual feeds (other option is 1 for input)
+    processlist_ui.init(1); // 1 means that contexttype is feeds and virtual feeds (other option is 0 for input)
 
     // Vheck if we need to expand any tag from URL
     var a= decodeURIComponent(window.location);

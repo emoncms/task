@@ -148,17 +148,17 @@ class Task {
 //--------------------------
 //  Save Tasks
 //--------------------------
-    public function create_task($userid, $name, $description, $tag, $frequency, $run_on) {
+    public function create_task($userid, $name, $description, $tag, $frequency, $run_on, $enabled = 0) {
         $userid = (int) $userid;
         $name = preg_replace('/[^\p{N}\p{L}_\s-:]/u', '', $name);
         $description = preg_replace('/[^\p{N}\p{L}_\s-:]/u', '', $description);
         $tag = preg_replace('/[^\p{N}\p{L}_\s-:]/u', '', $tag);
         $run_on = (preg_replace('/([^0-9])/', '', $run_on));
         $frequency = preg_replace("/[^\p{L}_\p{N}\s-.],'/u", '', $frequency);
-        $enabled = 0;
+        $enabled = (int) $enabled;
 
         if ($this->name_exists($userid, $name) == true)
-            return array('success' => false, 'message' => "Name already exists");
+            return array('success' => false, 'message' => "Task name already exists");
         else {
             $task_created = $this->mysqli->query("INSERT INTO `tasks` (`userid`, `name`, `description`, `tag`, `run_on`, `frequency`, `enabled`) VALUES ('$userid', '$name', '$description', '$tag', '$run_on', '$frequency','$enabled')");
             if ($this->redis && $task_created) {
@@ -217,7 +217,7 @@ class Task {
     }
 
     public function set_processlist($userid, $id, $processlist) {
-        $userid = (int)$userid;
+        $userid = (int) $userid;
         $id = (int) $id;
         $processlist = preg_replace('/([^0-9:],)/', '', $processlist);
 
