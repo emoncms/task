@@ -303,6 +303,23 @@ class Task {
         return true;
     }
 
+    public function task_belongs_to_user($id, $userid) {
+        $id = (int) $id;
+        $userid = (int) $userid;
+        $query = "SELECT id FROM tasks WHERE `id`='$id' AND `userid`='$userid'";
+
+        if ($this->redis) {
+//ToDo check if task exists
+        }
+        else {
+            $query_result = $this->mysqli->query("SELECT id FROM tasks WHERE `id`='$id' AND `userid`='$userid'");
+        }
+        if ($query_result->num_rows > 0)
+            return true;
+        else
+            return false;
+    }
+
     private function task_exists($id) {
         if ($this->redis) {
 //ToDo check if task exists
