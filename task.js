@@ -130,7 +130,10 @@ function bind_table_events(selector) {
         else
             contextname = i.tag + " : " + i.id;
         var processlist = processlist_ui.decode(i.processList); // Task process list
-        processlist_ui.load(contextid, processlist, contextname, null, null); // load configs
+        processlist_ui.load(contextid, processlist, contextname, null, null); // show process list modal
+        //Set default process to add
+        $("#process-select").val('task__feed_last_update_higher');
+        $("#process-select").change();
     });
     $("#save-processlist").unbind('click').bind('click', function () { // the reason for unbinding first is that otherwise the event gets triggered twice, I haven't been able to find the second bind so this is the best solution I could find
         console.log(processlist_ui)
