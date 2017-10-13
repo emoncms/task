@@ -219,9 +219,9 @@ class Task {
     public function set_processlist($userid, $id, $processlist) {
         $userid = (int) $userid;
         $id = (int) $id;
-        $processlist = preg_replace('/([^0-9:],)/', '', $processlist);
+        $processlist = preg_replace('/([^a-zA-Z0-9:,_{}(). ])/', '', $processlist);
 
-        $this->mysqli->query("UPDATE tasks SET processList = '$processlist' WHERE id='$id' AND userid='$userid'");
+        $this->mysqli->query("UPDATE tasks SET `processList` = '$processlist' WHERE `id`='$id' AND `userid`='$userid'");
         if ($this->mysqli->affected_rows > 0) {
 // CHECK REDIS
 //if ($this->redis) $this->redis->hset("feed:$id",'processList',$processlist);
