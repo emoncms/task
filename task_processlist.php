@@ -108,7 +108,7 @@ class Task_ProcessList {
         $timeformated->setTimezone(new DateTimeZone($this->parentProcessModel->timezone));
         $timeformated = $timeformated->format("Y-m-d H:i:s");
 
-        $result = $this->mysqli->query("SELECT time FROM input WHERE `id` = '$value'");
+        $result = $this->mysqli->query("SELECT time FROM input WHERE `id` = '$inputid'");
         $row = $result->fetch_array();
         $last_update = (int) $row['time'];
         $last_update = DateTime::createFromFormat("U", $last_update);
