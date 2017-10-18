@@ -27,12 +27,12 @@ MAIN
         <div id="no-user-tasks" class="alert alert-block"><p>You haven't got any tasks</p></div>
         <table id="user-tasks-table" class='table'></table>
 
-        <h3 class='if-groups-support'>My groups tasks</h3>
+        <!--<h3 class='if-groups-support'>My groups tasks</h3>
         <div id="no-group-member-tasks" class="alert alert-block if-groups-support"><p>You haven't got any tasks</p></div>
         <table id="group-mambers-tasks" class='table if-groups-support'>
             <p class='if-groups-support'>ToDo</p>
         </table>
-
+-->
         <div id="task-loader" class="ajax-loader hide"></div>
     </div>
 </div>

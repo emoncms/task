@@ -154,28 +154,28 @@ class Task_ProcessList {
         $last_value = $this->feed->get_timevalue($feedid);
         if ($last_value['value'] < $cond_value)
             $this->proc_goto = PHP_INT_MAX;
-        return $value;
+        return $feedid;
     }
 
     public function feed_last_value_less($cond_value, $time, $feedid) {// $feedid is the value passed from previous process,  it must be a valid feedid!!!
         $last_value = $this->feed->get_timevalue($feedid);
         if ($last_value['value'] > $cond_value)
             $this->proc_goto = PHP_INT_MAX;
-        return $value;
+        return $feedid;
     }
 
     public function input_last_value_greater($cond_value, $time, $inputid) {// $inputid is the value passed from previous process,  it must be a valid inputid!!!
         $last_value = $this->parentProcessModel->input->get_last_value($inputid);
         if ($last_value < $cond_value)
             $this->proc_goto = PHP_INT_MAX;
-        return $value;
+        return $inputid;
     }
 
     public function input_last_value_less($cond_value, $time, $inputid) {// $inputid is the value passed from previous process,  it must be a valid inputid!!!
         $last_value = $this->parentProcessModel->input->get_last_value($inputid);
         if ($last_value > $cond_value)
             $this->proc_goto = PHP_INT_MAX;
-        return $value;
+        return $inputid;
     }
 
 }
