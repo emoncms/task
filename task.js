@@ -147,12 +147,15 @@ function bind_table_events(selector) {
     $(selector).bind("onDraw", function (e, id, row) {
         // Replace dates that are 0 with the relevant information
         $('[field="time"]').each(function () { // Last run
-            if ($(this).html() === "1/1/1970 00:00") {
+            var date = new Date($(this).html());
+            var time = date.getTime();
+            console.log(time);
+            if ($(this).html() === "1/1/1970 00:00" || $(this).html() === "1/1/1970 01:00") {
                 $(this).html("Never");
             }
         });
         $('[field="run_on"]').each(function () { // When frequency is 0 it means that task is only run once (on the start date). When this is the case run_on is set to 0 (1/1/1970 0:0)
-            if ($(this).html() === "1/1/1970 00:00") {
+            if ($(this).html() === "1/1/1970 00:00" || $(this).html() === "1/1/1970 01:00") {
                 $(this).html("Never");
             }
         });
