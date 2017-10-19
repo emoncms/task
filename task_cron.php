@@ -36,7 +36,7 @@ chdir($new_dir);
 $fp = fopen("Modules/task/lockfile", "w");
 if (!flock($fp, LOCK_EX | LOCK_NB)) {
     echo "Already running\n";
-    // die;
+     die;
 }
 
 // 2) Load settings and core scripts
@@ -84,7 +84,7 @@ if (!isset($task_cron_frequency))    // Script update rate, defined in settings.
     $task_cron_frequency = 5;       //secs
 while (true) {
     $task->runScheduledTasks();
-    sleep($task_schedule_frequency); 
+    sleep($task_cron_frequency); 
     //die;
 }
 ?>

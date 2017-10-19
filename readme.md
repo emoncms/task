@@ -25,6 +25,7 @@ sudo sed -i '$a 1 * * * * root php /var/www/emoncms/Modules/tasks/tasks_cron.php
 ```
 This assumes your emonCMS installation is in `/var/www/emoncms`. 
 The cron job checks every 1s (or different if $task_cron_frequency defined in settings.php) for tasks that need to be run.
+Note: ensure permissions for lockfile are 666
 
 ## ToDo list
 - Redis support

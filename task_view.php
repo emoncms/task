@@ -2,7 +2,18 @@
 defined('EMONCMS_EXEC') or die('Restricted access');
 global $path, $fullwidth, $session;
 $fullwidth = true;
+
+// Check cron job is running in order to show a warning
+$fp = fopen("Modules/task/lockfile", "w");
+if (!flock($fp, LOCK_EX | LOCK_NB)) {
+    $cron_job_running = true;
+}
+else {
+    $cron_job_running = false;
+    flock($fp, LOCK_UN);    // release the lock
+}
 ?>
+
 <link href="<?php echo $path; ?>Modules/task/task.css" rel="stylesheet">
 <script language="javascript" type="text/javascript" src="<?php echo $path; ?>Modules/task/task.js"></script>
 <script type="text/javascript" src="<?php echo $path; ?>Lib/tablejs/table.js"></script>
@@ -22,7 +33,10 @@ MAIN
         <div style="padding-bottom:15px">
             <div id="create-task"><i class="icon-plus"></i>Create task</div>
         </div>
-
+        <div id="cron-job-running" class="alert alert-warning hide">
+            <p><b>Warning!</b></p>
+            <p> The cron job that automatically triggers the enabled tasks is not running. You may need to contact the administrator.</p>
+            <p>Until the cron job is started, tasks can only be triggered mannually</p></div>
         <h3>My tasks</h3>
         <div id="no-user-tasks" class="alert alert-block"><p>You haven't got any tasks</p></div>
         <table id="user-tasks-table" class='table'></table>
@@ -32,7 +46,7 @@ MAIN
         <table id="group-mambers-tasks" class='table if-groups-support'>
             <p class='if-groups-support'>ToDo</p>
         </table>
--->
+        -->
         <div id="task-loader" class="ajax-loader hide"></div>
     </div>
 </div>
@@ -85,6 +99,7 @@ JAVASCRIPT
 <script>
     var path = "<?php echo $path; ?>";
     var userid = <?php echo $session["userid"]; ?>;
+    var cron_job_running =<?php echo $cron_job_running === true ? 'true' : 'false'; ?>;
     var group_support = false;
 
     load_custom_table_fields();
@@ -93,21 +108,28 @@ JAVASCRIPT
     if (group_support === false)
         $('.if-groups-support').hide();
     else {
-//
+        // Are we implementing any kind of groups support?
     }
+
+    if (cron_job_running === false)
+        $('#cron-job-running').show();
+    else {
+        $('#cron-job-running').hide();
+    }
+
     // Process list UI js
     processlist_ui.init(2); // 1 means that contexttype is tasks(other option is 0 for input, 1 for feeds and virtual feeds)
 
     // Vheck if we need to expand any tag from URL
-    var a= decodeURIComponent(window.location);
+    var a = decodeURIComponent(window.location);
     var selected_tag = decodeURIComponent(window.location.hash).substring(1);
     console.log("Selected tag:" + selected_tag)
     if (selected_tag != "") {
         setTimeout(function () { // We need some extra time to let processlist_ui.init(1) to finish
-            $('[group="'+selected_tag+'"]')[0].click();
+            $('[group="' + selected_tag + '"]')[0].click();
         }, 100);
     }
-    
+
     // ----------------------------------------------------------------------------------------
     // Actions
     // ----------------------------------------------------------------------------------------
