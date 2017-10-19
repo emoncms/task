@@ -23,15 +23,17 @@ class Task {
     private $mysqli;
     private $redis;
     private $process;
+    private $user;
     private $log;
 
-    public function __construct($mysqli, $redis, $process) {
+    public function __construct($mysqli, $redis, $process, $user = null) {
         $this->log = new EmonLogger(__FILE__);
         $this->mysqli = $mysqli;
         $this->redis = $redis;
         /* $this->feed = $feed;
           $this->group = $group; */
         $this->process = $process;
+        $this->user = $user;
     }
 
 //--------------------------
@@ -115,9 +117,11 @@ class Task {
 // Run Tasks that are due
 //--------------------------
     public function runScheduledTasks() {
+        global $session;
         $enabled_tasks = $this->getEnabledTasks();
         foreach ($enabled_tasks as $task) {
             if ($task['run_on'] < time() && $task['run_on'] != 0) { // when run_on is 0, it means that it doens't need to be run. run_on is set to 0 when frequency is 0 which means that task should only be run once
+                $session['userid'] = $task['userid'];
                 $this->run_task($task);
             }
         }

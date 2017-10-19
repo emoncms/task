@@ -21,8 +21,6 @@ ini_set('error_reporting', E_ALL);
 // Set the display_errors directive to On 
 ini_set('display_errors', 1);
 
-$userid = 1;
-
 // 0) Set working directory
 $current_dir = __DIR__;
 $new_dir = str_replace('/Modules/task', '', $current_dir);
@@ -36,7 +34,7 @@ chdir($new_dir);
 $fp = fopen("Modules/task/lockfile", "w");
 if (!flock($fp, LOCK_EX | LOCK_NB)) {
     echo "Already running\n";
-     die;
+    die;
 }
 
 // 2) Load settings and core scripts
@@ -77,14 +75,14 @@ include "Modules/process/process_model.php";
 $process = new Process($mysqli, $input, $feed, 'UTC');
 
 include "Modules/task/task_model.php";
-$task = new Task($mysqli, $redis, $process);
+$task = new Task($mysqli, $redis, $process, $user);
 
 // 5) Run the "daemon", this is the "main" running in a loop
 if (!isset($task_cron_frequency))    // Script update rate, defined in settings.php
     $task_cron_frequency = 5;       //secs
 while (true) {
     $task->runScheduledTasks();
-    sleep($task_cron_frequency); 
+    sleep($task_cron_frequency);
     //die;
 }
 ?>
