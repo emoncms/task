@@ -21,11 +21,12 @@ You also need to update your emonCMS from here: [emonCMS with Task Module suppor
 The aim of the Task Module is to run the tasks automatically when they are enabled and it is the time to do so.
 The script *tasks_cron.php* is the one that runs them. It is intended to be a cron job (Linux) or a scheduled task (Windows) so that the schedule can be run periodically.
 ```
-sudo sed -i '$a 1 * * * * root php /var/www/emoncms/Modules/tasks/tasks_cron.php' /etc/crontab
+sudo sed -i '$a */1 * * * * root php /var/www/emoncms/Modules/tasks/tasks_cron.php' /etc/crontab
 ```
 This assumes your emonCMS installation is in `/var/www/emoncms`. 
-The cron job checks every 1s (or different if $task_cron_frequency defined in settings.php) for tasks that need to be run.
+The cron job checks every 5s (or different if $task_cron_frequency defined in settings.php) for tasks that need to be run.
 Note: ensure permissions for lockfile are 666
+Note*: when setting up the cron job it is better to change the root user to the same one that runs the server, in linux systems it normally is www-data
 
 ## ToDo list
 - Redis support
