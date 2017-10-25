@@ -132,7 +132,7 @@ function bind_table_events(selector) {
         var processlist = processlist_ui.decode(i.processList); // Task process list
         processlist_ui.load(contextid, processlist, contextname, null, null); // show process list modal
         //Set default process to add
-        $("#process-select").val('task__feed_last_update_higher');
+        $("#process-select").val('task__feed_last_update_greater');
         $("#process-select").change();
     });
     $("#save-processlist").unbind('click').bind('click', function () { // the reason for unbinding first is that otherwise the event gets triggered twice, I haven't been able to find the second bind so this is the best solution I could find
@@ -149,7 +149,6 @@ function bind_table_events(selector) {
         $('[field="time"]').each(function () { // Last run
             var date = new Date($(this).html());
             var time = date.getTime();
-            console.log(time);
             if ($(this).html() === "1/1/1970 00:00" || $(this).html() === "1/1/1970 01:00") {
                 $(this).html("Never");
             }
