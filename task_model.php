@@ -34,6 +34,11 @@ class Task {
           $this->group = $group; */
         $this->process = $process;
         $this->user = $user;
+
+        if ($this->redis && !$this->redis->exists('tasks_loaded')) {
+            $this->load_to_redis();
+            $this->redis->set('tasks_loaded', true);
+        }
     }
 
 //--------------------------
@@ -51,7 +56,16 @@ class Task {
     }
 
     private function redis_get_tasks($userid) {
-//ToDo
+        $userid = (int) $userid;
+        $array_of_tasks = array();
+        $taskids = $this->redis->sMembers("user:tasks:$userid");
+
+        $pipe = $this->redis->multi(Redis::PIPELINE);
+        foreach ($taskids as $id)
+            $pipe->hGetAll("tasks:$id");
+
+        $array_of_tasks = $pipe->exec();
+        return $array_of_tasks;
     }
 
     private function mysql_get_tasks($userid) {
@@ -69,7 +83,7 @@ class Task {
         $id = (int) $id;
 
         if ($this->redis) {
-            return $this->redis_get_task($id, $userid);
+            return $this->redis_get_task($userid, $id);
         }
         else {
             return $this->mysql_get_task($userid, $id);
@@ -77,36 +91,16 @@ class Task {
     }
 
     private function redis_get_task($userid, $id) {
-//ToDo
+        if ($this->redis->sismember("user:tasks:$userid", $id)) {
+            return $this->redis->hgetall("tasks:$id");
+        }
+        else {
+            return false;
+        }
     }
 
     private function mysql_get_task($userid, $id) {
-        $userid = (int) $userid;
         $result = $this->mysqli->query("SELECT * FROM tasks WHERE `userid` = '$userid' AND `id`='$id'");
-        if ($result->num_rows > 0)
-            return $result->fetch_array();
-        else
-            return false;
-    }
-
-    public function getTaskByTaskId($userid, $id) {
-        $id = (int) $id;
-        $userid = (int) $userid;
-
-        if ($this->redis) {
-            return $this->redis_getTaskByTaskId($id);
-        }
-        else {
-            return $this->mysql_getTaskByTaskId($id);
-        }
-    }
-
-    private function redis_getTaskByTaskId($userid, $id) {
-//ToDo
-    }
-
-    private function mysql_getTaskByTaskId($userid, $id) {
-        $result = $this->mysqli->query("SELECT * FROM tasks WHERE `id`='$id' AND `userid` = '$userid'");
         if ($result->num_rows > 0)
             return $result->fetch_array();
         else
@@ -137,7 +131,20 @@ class Task {
     }
 
     private function redis_getEnabledTasks() {
-//ToDo
+        $enabled_tasks = array();
+        $tasks = $this->redis->keys("tasks:*");
+        $pipe = $this->redis->multi(Redis::PIPELINE);
+        foreach ($tasks as $task) {
+            $task = str_replace("emoncms:", "", $task);
+            $pipe->hGetAll($task);
+        }
+
+        $tasks = $pipe->exec();
+        foreach ($tasks as $task) {
+            if ($task['enabled'] == '1')
+                $enabled_tasks[] = $task;
+        }
+        return $enabled_tasks;
     }
 
     private function mysql_getEnabledTasks() {
@@ -165,13 +172,25 @@ class Task {
             return array('success' => false, 'message' => "Task name already exists");
         else {
             $task_created = $this->mysqli->query("INSERT INTO `tasks` (`userid`, `name`, `description`, `tag`, `run_on`, `frequency`, `enabled`) VALUES ('$userid', '$name', '$description', '$tag', '$run_on', '$frequency','$enabled')");
+            $task_id = $this->mysqli->insert_id;
             if ($this->redis && $task_created) {
-//ToDo insert task
+                $this->redis->sadd("user:tasks:$userid", $task_id);
+                $this->redis->hmset("tasks:$task_id", [
+                    'id' => $task_id,
+                    'userid' => $userid,
+                    'name' => $name,
+                    'description' => $description,
+                    'tag' => $tag,
+                    'run_on' => $run_on,
+                    'time' => 0,
+                    'frequency' => $frequency,
+                    'enabled' => $enabled
+                ]);
             }
             if ($task_created == false || $task_created == 0)
                 return array('success' => false, 'message' => "Task could not be saved");
             else
-                return $this->mysqli->insert_id;
+                return $task_id;
         }
     }
 
@@ -182,7 +201,7 @@ class Task {
 
         $array = array();
 
-// Repeat this line changing the field name to add fields that can be updated:
+        // Repeat this line changing the field name to add fields that can be updated:
         if (isset($fields->description))
             $array[] = "`description` = '" . preg_replace('/[^\p{L}_\p{N}\s-]/u', '', $fields->description) . "'";
         if (isset($fields->name))
@@ -194,25 +213,50 @@ class Task {
             $str = str_replace('"', '\"', $str);  // add slashes, otherwise SQL query below breaks
             $array[] = $str;
         }
-        if (isset($fields->enabled))
+        if (isset($fields->enabled)) {
             $array[] = "`enabled` = '" . (bool) $fields->enabled . "'";
+        }
         if (isset($fields->run_on))
             $array[] = "`run_on` = '" . preg_replace('/([^0-9])/', '', $fields->run_on) . "'";
         if (isset($fields->time))
             $array[] = "`time` = '" . preg_replace('/([^0-9])/', '', $fields->time) . "'";
 
-// Convert to a comma seperated string for the mysql query
+        // Convert to a comma seperated string for the mysql query
         $fieldstr = implode(",", $array);
         $this->mysqli->query("UPDATE tasks SET " . $fieldstr . " WHERE `id` = '$id' AND `userid` = '$userid'");
-
-// CHECK REDIS?
-// UPDATE REDIS
-        /* if (isset($fields->name) && $this->redis)
-          $this->redis->hset("input:$id", 'name', $fields->name);
-          if (isset($fields->description) && $this->redis)
-          $this->redis->hset("input:$id", 'description', $fields->description);
-         */
+        //$result= $this->mysqli->store_result();
+        //$eroor = $this->mysqli->error;
         if ($this->mysqli->affected_rows > 0) {
+            $success = true;
+        }
+        else {
+            $success = false;
+        }
+
+        // Update in redis
+        if ($success && $this->redis) {
+            $pipe = $this->redis->multi(REDIS::PIPELINE);
+            if (isset($fields->description))
+                $this->redis->hset("tasks:$id", 'description', preg_replace('/[^\p{L}_\p{N}\s-]/u', '', $fields->description));
+            if (isset($fields->name))
+                $this->redis->hset("tasks:$id", 'name', preg_replace('/[^\p{L}_\p{N}\s-.]/u', '', $fields->name));
+            if (isset($fields->tag))
+                $this->redis->hset("tasks:$id", 'tag', preg_replace('/[^\p{L}_\p{N}\s-.]/u', '', $fields->tag));
+            if (isset($fields->frequency)) {
+                $this->redis->hset("tasks:$id", 'frequency', json_encode($fields->frequency));
+            }
+            if (isset($fields->enabled)) {
+                $asdfs = (bool) $fields->enabled;
+                $this->redis->hset("tasks:$id", 'enabled', (bool) $fields->enabled === true ? '1' : '0');
+            }
+            if (isset($fields->run_on))
+                $this->redis->hset("tasks:$id", 'run_on', preg_replace('/([^0-9])/', '', $fields->run_on));
+            if (isset($fields->time))
+                $this->redis->hset("tasks:$id", 'time', preg_replace('/([^0-9])/', '', $fields->time));
+            $pipe->exec();
+        }
+
+        if ($success) {
             return array('success' => true, 'message' => 'Field updated');
         }
         else {
@@ -227,8 +271,8 @@ class Task {
 
         $this->mysqli->query("UPDATE tasks SET `processList` = '$processlist' WHERE `id`='$id' AND `userid`='$userid'");
         if ($this->mysqli->affected_rows > 0) {
-// CHECK REDIS
-//if ($this->redis) $this->redis->hset("feed:$id",'processList',$processlist);
+            if ($this->redis)
+                $this->redis->hset("tasks:$id", 'processList', $processlist);
             return array('success' => true, 'message' => 'Task processlist updated');
         }
         else {
@@ -243,11 +287,12 @@ class Task {
         $id = (int) $id;
         $userid = (int) $userid;
 
-//check if task exists
+        //check if task exists
         if ($this->task_exists($id) == true) {
             $task_deleted = $this->mysqli->query("DELETE FROM tasks WHERE `id` = '$id' AND `userid`='$userid'");
             if ($this->redis && $task_deleted) {
-//ToDo delete task
+                $this->redis->del("tasks:$id");
+                $this->redis->srem("user:tasks:$userid", $id);
             }
             return $task_deleted;
         }
@@ -310,31 +355,36 @@ class Task {
     public function task_belongs_to_user($id, $userid) {
         $id = (int) $id;
         $userid = (int) $userid;
-        $query = "SELECT id FROM tasks WHERE `id`='$id' AND `userid`='$userid'";
 
         if ($this->redis) {
-//ToDo check if task exists
+            if ($this->redis->sismember("user:tasks:$userid", $id))
+                return true;
+            else
+                return false;
         }
         else {
             $query_result = $this->mysqli->query("SELECT id FROM tasks WHERE `id`='$id' AND `userid`='$userid'");
+            if ($query_result->num_rows > 0)
+                return true;
+            else
+                return false;
         }
-        if ($query_result->num_rows > 0)
-            return true;
-        else
-            return false;
     }
 
     private function task_exists($id) {
         if ($this->redis) {
-//ToDo check if task exists
+            if ($this->redis->exists("tasks:$id"))
+                return true;
+            else
+                return false;
         }
         else {
             $query_result = $this->mysqli->query("SELECT id FROM tasks WHERE `id` = '$id'");
+            if ($query_result->num_rows > 0)
+                return true;
+            else
+                return false;
         }
-        if ($query_result->num_rows > 0)
-            return true;
-        else
-            return false;
     }
 
     public function disableTask($userid, $id) {
@@ -342,7 +392,7 @@ class Task {
         $id = (int) $id;
         $result = $this->mysqli->query("UPDATE `tasks` SET `enabled`='0' WHERE `id`= '$id' AND `userid`='$userid'");
         if ($this->redis) {
-//ToDo
+            $this->redis->hset("tasks:$id", "enabled", '0');
         }
         return $result;
     }
@@ -353,7 +403,7 @@ class Task {
 
         $result = $this->mysqli->query("UPDATE `tasks` SET `run_on`='$new_run_on_time' WHERE `id`= '$id'");
         if ($this->redis) {
-//ToDo
+            $this->redis->hset("tasks:$id", "run_on", "$new_run_on_time");
         }
         return $result;
     }
@@ -364,22 +414,36 @@ class Task {
 
         $result = $this->mysqli->query("UPDATE `tasks` SET `time`='$last_run_time' WHERE `id`= '$id'");
         if ($this->redis) {
-//ToDo
+            $this->redis->hset("tasks:$id", "time", "$last_run_time");
         }
         return $result;
     }
 
     private function name_exists($userid, $name) {
-        if ($this->redis) {
-            
-        }
-        else {
-            $result = $this->mysqli->query("SELECT id FROM tasks WHERE `name` = '$name' AND `userid` = '$userid'");
-        }
+        $result = $this->mysqli->query("SELECT id FROM tasks WHERE `name` = '$name' AND `userid` = '$userid'");
         if ($result->num_rows > 0)
             return true;
         else
             return false;
+    }
+
+    private function load_to_redis() {
+        $result = $this->mysqli->query("SELECT * FROM tasks ORDER BY userid,name asc");
+        while ($row = $result->fetch_object()) {
+            $this->redis->sAdd("user:tasks:" . $row->userid, $row->id);
+            $this->redis->hMSet("tasks:$row->id", array(
+                'id' => $row->id,
+                'userid' => $row->userid,
+                'name' => $row->name,
+                'description' => $row->description,
+                'tag' => $row->tag,
+                'run_on' => $row->run_on,
+                'frequency' => $row->frequency,
+                'processList' => $row->processList,
+                'time' => $row->time,
+                'enabled' => $row->enabled
+            ));
+        }
     }
 
 }

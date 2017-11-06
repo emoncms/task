@@ -39,24 +39,28 @@ if (!flock($fp, LOCK_EX | LOCK_NB)) {
 
 // 2) Load settings and core scripts
 require "process_settings.php";
-//require 'settings.php'; // I think this has been done in process_settings.php
+
 // 3) Database
 $mysqli = new mysqli($server, $username, $password, $database);
-//$redis = new Redis();
-$redis = null; // redis support not implemented yet 
-//$redis->connect("127.0.0.1");
-//Redis connection from /Modules/postprocess/postprocess_run.php
-/*
-  if (!$redis_enabled) { echo "ERROR: Redis is not enabled"; die; }
-  $redis = new Redis();
-  $connected = $redis->connect($redis_server['host'], $redis_server['port']);
-  if (!$connected) { echo "Can't connect to redis at ".$redis_server['host'].":".$redis_server['port']; die; }
-  if (!empty($redis_server['prefix'])) $redis->setOption(Redis::OPT_PREFIX, $redis_server['prefix']);
-  if (!empty($redis_server['auth'])) {
-  if (!$redis->auth($redis_server['auth'])) {
-  echo "Can't connect to redis at ".$redis_server['host'].", autentication failed"; die;
-  }
-  } */
+if ($redis_enabled) {
+    $redis = new Redis();
+    $connected = $redis->connect($redis_server['host'], $redis_server['port']);
+    if (!$connected) {
+        echo "Can't connect to redis at " . $redis_server['host'] . ":" . $redis_server['port'] . " , it may be that redis-server is not installed or started see readme for redis installation";
+        die;
+    }
+    if (!empty($redis_server['prefix']))
+        $redis->setOption(Redis::OPT_PREFIX, $redis_server['prefix']);
+    if (!empty($redis_server['auth'])) {
+        if (!$redis->auth($redis_server['auth'])) {
+            echo "Can't connect to redis at " . $redis_server['host'] . ", autentication failed";
+            die;
+        }
+    }
+}
+else {
+    $redis = false;
+}
 
 //
 // 4) Include files
@@ -67,10 +71,8 @@ $user = new User($mysqli, $redis);
 
 include "Modules/feed/feed_model.php";
 $feed = new Feed($mysqli, $redis, $feed_settings);
-
 include "Modules/input/input_model.php";
 $input = new Input($mysqli, $redis, $feed);
-
 include "Modules/process/process_model.php";
 $process = new Process($mysqli, $input, $feed, 'UTC');
 
@@ -79,10 +81,10 @@ $task = new Task($mysqli, $redis, $process, $user);
 
 // 5) Run the "daemon", this is the "main" running in a loop
 if (!isset($task_cron_frequency))    // Script update rate, defined in settings.php
-    $task_cron_frequency = 5;       //secs
+    $task_cron_frequency = 5; //secs
 while (true) {
     $task->runScheduledTasks();
-    sleep($task_cron_frequency);
-    //die;
+   // sleep($task_cron_frequency);
+    die;
 }
 ?>

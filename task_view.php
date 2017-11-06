@@ -118,8 +118,8 @@ JAVASCRIPT
     }
 
     // Process list UI js
-    processlist_ui.init(2); // 1 means that contexttype is tasks(other option is 0 for input, 1 for feeds and virtual feeds)
-
+    processlist_ui.init(2); // 2 means that contexttype is tasks(other option is 0 for input, 1 for feeds and virtual feeds)
+    
     // Vheck if we need to expand any tag from URL
     var a = decodeURIComponent(window.location);
     var selected_tag = decodeURIComponent(window.location.hash).substring(1);

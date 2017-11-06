@@ -63,6 +63,14 @@ function task_controller() {
             $route->format = "json";
             $result = $task->run_user_task($session['userid'], get('id'));
         }
+        if ($route->action == 'gettask') {
+            $route->format = "json";
+            $result = $task->get_task($session['userid'], get('id'));
+        }
+        /*if ($route->action == 'test') {
+            $route->format = "json";
+            $result = $task->setLastRun(62, 8998753);
+        }*/
     }
     if ($session['read']) {
         if ($route->action == "getusertasks") {
