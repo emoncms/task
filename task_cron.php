@@ -80,11 +80,11 @@ require_once "Modules/task/task_model.php";
 $task = new Task($mysqli, $redis, $process, $user);
 
 // 5) Run the "daemon", this is the "main" running in a loop
-if (!isset($task_cron_frequency))    // Script update rate, defined in settings.php
-    $task_cron_frequency = 5; //secs
+if (!isset($task_cron_frequency))   // Script update rate, defined in settings.php
+    $task_cron_frequency = 1;       // secs
+
 while (true) {
     $task->runScheduledTasks();
-   // sleep($task_cron_frequency);
-    die;
+    sleep($task_cron_frequency);
+    //die;
 }
-?>
