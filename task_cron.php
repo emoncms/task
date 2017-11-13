@@ -76,7 +76,7 @@ $input = new Input($mysqli, $redis, $feed);
 include "Modules/process/process_model.php";
 $process = new Process($mysqli, $input, $feed, 'UTC');
 
-include "Modules/task/task_model.php";
+require_once "Modules/task/task_model.php";
 $task = new Task($mysqli, $redis, $process, $user);
 
 // 5) Run the "daemon", this is the "main" running in a loop

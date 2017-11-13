@@ -21,6 +21,7 @@ else {
 <script type="text/javascript" src="<?php echo $path; ?>Modules/task/task-custom-table-fields.js"></script>
 <link href="<?php echo $path; ?>Lib/bootstrap-datetimepicker-0.0.11/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
 <script type="text/javascript" src="<?php echo $path; ?>Lib/bootstrap-datetimepicker-0.0.11/js/bootstrap-datetimepicker.min.js"></script>
+<script type="text/javascript" src="<?php echo $path; ?>Modules/feed/feed.js"></script>
 
 <!-------------------------------------------------------------------------------------------
 MAIN
