@@ -269,6 +269,33 @@ class Task {
         $id = (int) $id;
         $processlist = preg_replace('/([^a-zA-Z0-9:,_{}(). ])/', '', $processlist);
 
+        // Validate processlist
+        $process_list = $this->process->get_process_list(); // list of available processes 
+        $pairs = explode(",", $processlist);
+        foreach ($pairs as $pair) {
+            $inputprocess = explode(":", $pair);
+            if (count($inputprocess) == 2) {
+                $processid = (int) $inputprocess[0];
+                $arg = (int) $inputprocess[1];
+
+                // Check that feed exists and user has ownership
+                if (isset($process_list[$processid]) && $process_list[$processid][1] == ProcessArg::FEEDID) {
+                    if (!$this->process->feed->access($userid, $arg)) {
+                        return array('success' => false, 'message' => _("Invalid feed"));
+                    }
+                }
+
+                // Check that input exists and user has ownership
+                if (isset($process_list[$processid]) && $process_list[$processid][1] == ProcessArg::INPUTID) {
+                    $inputid = (int) $arg;
+                    $result = $this->mysqli->query("SELECT id FROM input WHERE `userid` = '$userid' AND `id` = '$arg'");
+                    if ($result->num_rows != 1)
+                        return array('success' => false, 'message' => _("Invalid input"));
+                }
+            }
+        }
+
+        // Save processList
         $this->mysqli->query("UPDATE tasks SET `processList` = '$processlist' WHERE `id`='$id' AND `userid`='$userid'");
         if ($this->mysqli->affected_rows > 0) {
             if ($this->redis)
