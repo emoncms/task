@@ -32,10 +32,6 @@ Then add the following line:
 This assumes your emonCMS installation is in `/var/www/emoncms`. 
 The cron job checks every 5s (or different if $task_cron_frequency defined in settings.php) for tasks that need to be run.
 Note: ensure permissions for lockfile are 666
-Note*: when setting up the cron job it is better to change the root user to the same one that runs the server, in linux systems it normally is www-data
-
-## ToDo list
-- Redis support
 
 ## Future developments (who knows when)
 - Add group support: this would allow access to group user's feeds. Useful for calculating aggregation feeds (this can currently be done from groups module view)
