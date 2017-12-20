@@ -207,6 +207,7 @@ class Task_ProcessList {
      */
 
     public function feed_last_value_greater($cond_value, $time, $feedid, $options) {// $feedid is the value passed from previous process,  it must be a valid feedid!!!
+        global $session;
         if ($this->user_has_access_to_feed($session['userid'], $feedid)) {
             $last_value = $this->feed->get_timevalue($feedid);
             if ($last_value['value'] < $cond_value)
@@ -220,6 +221,7 @@ class Task_ProcessList {
     }
 
     public function feed_last_value_less($cond_value, $time, $feedid, $options) {// $feedid is the value passed from previous process,  it must be a valid feedid!!!
+        global $session;
         if ($this->user_has_access_to_feed($session['userid'], $feedid)) {
             $last_value = $this->feed->get_timevalue($feedid);
             if ($last_value['value'] > $cond_value)
