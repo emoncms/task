@@ -1,7 +1,17 @@
 <?php
 defined('EMONCMS_EXEC') or die('Restricted access');
-global $path, $fullwidth, $session;
+global $path, $fullwidth, $session, $mysqli;
 $fullwidth = true;
+
+// Check table has been created in database
+$result = $mysqli->query("SHOW TABLES LIKE 'tasks'");
+if ($result->num_rows > 0) {
+    $module_installation_complete = true;
+}
+else {
+    $module_installation_complete = false;
+}
+
 
 // Check cron job is running in order to show a warning
 $fp = fopen("Modules/task/lockfile", "w");
@@ -34,10 +44,22 @@ MAIN
         <div style="padding-bottom:15px">
             <div id="create-task"><i class="icon-plus"></i>Create task</div>
         </div>
+        <div id="module-installation-error" class="alert alert-warning hide">
+            <p><b>Warning!</b></p>
+            <p>It looks like you have installed the module but not updated the database. The Task module won't work!</p>
+            <p>So:</p>
+            <ul>
+                <li>In emonCMS in the menu on the top: click on setup</li>
+                <li>Click on Administration</li>
+                <li>On the Update database row, click on Update & Check</li>
+                <li>In the new screen click on Apply changes</li>
+            </ul>
+        </div>
         <div id="cron-job-running" class="alert alert-warning hide">
             <p><b>Warning!</b></p>
             <p> The cron job that automatically triggers the enabled tasks is not running. You may need to contact the administrator.</p>
-            <p>Until the cron job is started, tasks can only be triggered mannually</p></div>
+            <p>Until the cron job is started, tasks can only be triggered mannually</p>
+        </div>
         <h3>My tasks</h3>
         <div id="no-user-tasks" class="alert alert-block"><p>You haven't got any tasks</p></div>
         <table id="user-tasks-table" class='table'></table>
@@ -102,6 +124,7 @@ JAVASCRIPT
     var userid = <?php echo $session["userid"]; ?>;
     var cron_job_running =<?php echo $cron_job_running === true ? 'true' : 'false'; ?>;
     var group_support = false;
+    var module_installation_complete = <?php echo $module_installation_complete === true ? 'true' : 'false'; ?>;
 
     load_custom_table_fields();
     draw_user_tasks('#user-tasks-table', task.getUserTasks());
@@ -112,6 +135,12 @@ JAVASCRIPT
         // Are we implementing any kind of groups support?
     }
 
+    if (module_installation_complete === false)
+        $('#module-installation-error').show();
+    else {
+        $('#module-installation-error').hide();
+    }
+
     if (cron_job_running === false)
         $('#cron-job-running').show();
     else {
@@ -120,7 +149,7 @@ JAVASCRIPT
 
     // Process list UI js
     processlist_ui.init(2); // 2 means that contexttype is tasks(other option is 0 for input, 1 for feeds and virtual feeds)
-    
+
     // Vheck if we need to expand any tag from URL
     var a = decodeURIComponent(window.location);
     var selected_tag = decodeURIComponent(window.location.hash).substring(1);
