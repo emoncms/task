@@ -214,7 +214,11 @@ class Task {
             $array[] = $str;
         }
         if (isset($fields->enabled)) {
-            $array[] = "`enabled` = '" . (bool) $fields->enabled . "'";
+            $enabled = (bool) $fields->enabled;
+            if ($enabled === true)
+                $array[] = "`enabled` = '1'";
+            else
+                $array[] = "`enabled` = '0'";
         }
         if (isset($fields->run_on))
             $array[] = "`run_on` = '" . preg_replace('/([^0-9])/', '', $fields->run_on) . "'";
@@ -232,7 +236,7 @@ class Task {
         else {
             $success = false;
             $error = $this->mysqli->error;
-            $this->log->warn("Error saving task field in database -  ".$this->mysqli->error);
+            $this->log->warn("Error saving task field in database -  " . $this->mysqli->error);
         }
 
         // Update in redis
