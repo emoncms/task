@@ -352,6 +352,7 @@ class Task {
         if ($update_next_run === true) {
             $frequency = json_decode($task['frequency']);
             if ($frequency->type == 'number_of') {
+                $seconds = 0;
                 $seconds = 7 * 24 * 3600 * $frequency->weeks;
                 $seconds += 24 * 3600 * $frequency->days;
                 $seconds += 3600 * $frequency->hours;
