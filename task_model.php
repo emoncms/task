@@ -346,7 +346,7 @@ class Task {
 
     private function run_task($task, $update_next_run = true) {
         $opt = array('sourcetype' => ProcessOriginType::TASK, 'sourceid' => $task['id']);
-        if (is_null($task['processList']) == false && $task['processList'] != ''){
+        if (is_null($task['processList']) == false && $task['processList'] != '') {
             $this->process->input(time(), 0, $task['processList'], $opt);
         }
         if ($update_next_run === true) {
@@ -357,6 +357,9 @@ class Task {
                 $seconds += 3600 * $frequency->hours;
                 $seconds += 60 * $frequency->minutes;
                 $seconds += $frequency->seconds;
+                if ($seconds == 0) {
+                    $result = $this->disableTask($task['userid'], $task['id']);
+                }
                 $this->setRunOn($task['id'], time() + $seconds);
             }
             elseif ($frequency->type == 'one_time') // Task to be run only once
