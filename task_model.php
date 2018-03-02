@@ -346,8 +346,9 @@ class Task {
 
     private function run_task($task, $update_next_run = true) {
         $opt = array('sourcetype' => ProcessOriginType::TASK, 'sourceid' => $task['id']);
-        if (is_null($task['processList']) == false)
+        if (is_null($task['processList']) == false && $task['processList'] != ''){
             $this->process->input(time(), 0, $task['processList'], $opt);
+        }
         if ($update_next_run === true) {
             $frequency = json_decode($task['frequency']);
             if ($frequency->type == 'number_of') {
