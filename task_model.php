@@ -231,6 +231,8 @@ class Task {
         }
         else {
             $success = false;
+            $error = $this->mysqli->error;
+            $this->log->warn("Error saving task field in database -  ".$this->mysqli->error);
         }
 
         // Update in redis
@@ -260,7 +262,7 @@ class Task {
             return array('success' => true, 'message' => 'Field updated');
         }
         else {
-            return array('success' => false, 'message' => 'Field could not be updated');
+            return array('success' => false, 'message' => 'Field could not be updated - ' . $error);
         }
     }
 

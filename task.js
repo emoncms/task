@@ -104,7 +104,7 @@ function bind_table_events(selector) {
     $(selector).bind("onSave", function (e, id, fields_to_update) {
         if (fields_to_update.frequency != undefined)
             fields_to_update.frequency = JSON.parse(fields_to_update.frequency); // frequency is a string, when we call task.setTask it stringfys all the fields, if we don't parse it now the final strinng is corrupted JSON 
-        task.setTask(id, fields_to_update);
+        var result= task.setTask(id, fields_to_update);
         draw_user_tasks(selector, task.getUserTasks());
     });
     $(selector).bind("onDelete", function (e, id, row) {
