@@ -12,6 +12,14 @@ else {
     $module_installation_complete = false;
 }
 
+// Check group module is installed
+$result = $mysqli->query("SHOW TABLES LIKE 'groups'");
+if ($result->num_rows > 0) {
+    $group_support = true;
+}
+else {
+    $group_support = false;
+}
 
 // Check cron job is running in order to show a warning
 $fp = fopen("Modules/task/lockfile", "w");
@@ -32,6 +40,9 @@ else {
 <link href="<?php echo $path; ?>Lib/bootstrap-datetimepicker-0.0.11/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
 <script type="text/javascript" src="<?php echo $path; ?>Lib/bootstrap-datetimepicker-0.0.11/js/bootstrap-datetimepicker.min.js"></script>
 <script type="text/javascript" src="<?php echo $path; ?>Modules/feed/feed.js"></script>
+<?php if ($group_support === true) { ?>
+    <script type="text/javascript" src="<?php echo $path; ?>Modules/group/group.js"></script>
+<?php } ?>
 
 <!-------------------------------------------------------------------------------------------
 MAIN
@@ -123,16 +134,18 @@ JAVASCRIPT
     var path = "<?php echo $path; ?>";
     var userid = <?php echo $session["userid"]; ?>;
     var cron_job_running =<?php echo $cron_job_running === true ? 'true' : 'false'; ?>;
-    var group_support = false;
+    var group_support = <?php echo $group_support === true ? 'true' : 'false'; ?>;
     var module_installation_complete = <?php echo $module_installation_complete === true ? 'true' : 'false'; ?>;
 
-    load_custom_table_fields();
+    load_custom_table_fields();// Process list UI js
+    processlist_ui.init(2); // 2 means that contexttype is taks(other option is 0 for input, 1 for feeds and virtual feeds)
     draw_user_tasks('#user-tasks-table', task.getUserTasks());
 
+    // Group module support
     if (group_support === false)
         $('.if-groups-support').hide();
     else {
-        // Are we implementing any kind of groups support?
+        // Antyhing to do?
     }
 
     if (module_installation_complete === false)
@@ -147,10 +160,7 @@ JAVASCRIPT
         $('#cron-job-running').hide();
     }
 
-    // Process list UI js
-    processlist_ui.init(2); // 2 means that contexttype is tasks(other option is 0 for input, 1 for feeds and virtual feeds)
-
-    // Vheck if we need to expand any tag from URL
+    // Check if we need to expand any tag from URL
     var a = decodeURIComponent(window.location);
     var selected_tag = decodeURIComponent(window.location.hash).substring(1);
     console.log("Selected tag:" + selected_tag)

@@ -84,10 +84,21 @@ function draw_user_tasks(selector, user_tasks) {
         'delete-action': {'title': '', 'type': "delete"},
         'processlist-action': {'title': '', 'type': "iconbasic", 'icon': 'icon-wrench'},
         'run_task': {'title': '', 'type': "run_task"},
-    }
+    };
 
     table.data = user_tasks;
-    table.draw();
+    // Group module support
+    if (group_support === false)
+        table.draw();
+    else{
+        setTimeout(function () { // We need to wait a little bit to ley processlist_ui finish initialating
+            processlist_load_group_users_feeds();
+            table.draw();
+        }, 100);
+    }
+
+    console.log(processlist_ui.init_done);
+
     bind_table_events(selector);
 }
 
@@ -104,7 +115,7 @@ function bind_table_events(selector) {
     $(selector).bind("onSave", function (e, id, fields_to_update) {
         if (fields_to_update.frequency != undefined)
             fields_to_update.frequency = JSON.parse(fields_to_update.frequency); // frequency is a string, when we call task.setTask it stringfys all the fields, if we don't parse it now the final strinng is corrupted JSON 
-        var result= task.setTask(id, fields_to_update);
+        var result = task.setTask(id, fields_to_update);
         draw_user_tasks(selector, task.getUserTasks());
     });
     $(selector).bind("onDelete", function (e, id, row) {
@@ -130,6 +141,11 @@ function bind_table_events(selector) {
         else
             contextname = i.tag + " : " + i.id;
         var processlist = processlist_ui.decode(i.processList); // Task process list
+
+        // Group module support
+        //if (group_support === true)
+        //  processlist_load_group_users_feeds();
+
         processlist_ui.load(contextid, processlist, contextname, null, null); // show process list modal
         //Set default process to add
         $("#process-select").val('task__feed_last_update_greater');
@@ -168,4 +184,18 @@ function load_custom_table_fields() {
     // Extend table with a new fields specific to the task module
     for (z in taskcustomtablefields)
         table.fieldtypes[z] = taskcustomtablefields[z];
+}
+
+// Loads into processlist_ui.feedlist array feeds from all the users in the groups
+function processlist_load_group_users_feeds() {
+    processlist_ui.feedlist = {};
+    var mygroups = group.extendedgrouplist();
+    mygroups.forEach(function (group) {
+        group.users.forEach(function (user) {
+            user.feedslist.forEach(function (feed) {
+                processlist_ui.feedlist[feed.id] = JSON.parse(JSON.stringify(feed));
+                processlist_ui.feedlist[feed.id].name = group.name + ': ' + user.username + ": " + feed.name;
+            });
+        });
+    });
 }

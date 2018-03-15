@@ -20,11 +20,12 @@ class Task_ProcessList {
     private $input;
     private $task;
     private $proc_goto;          // goto step in process list
+    private $group;
 
 // Module required constructor, receives parent as reference
 
     public function __construct(&$parent) {
-        global $redis;
+        global $redis, $user;
 
         $this->log = new EmonLogger(__FILE__);
         $this->mysqli = &$parent->mysqli;
@@ -34,6 +35,15 @@ class Task_ProcessList {
         $this->proc_goto = &$parent->proc_goto;
         require_once "Modules/task/task_model.php";
         $this->task = new Task($this->mysqli, $redis, $parent);
+
+        $result = $this->mysqli->query("SHOW TABLES LIKE 'groups'");
+        if ($result->num_rows > 0) {
+            require_once "Modules/group/group_model.php";
+            $this->group = new Group($this->mysqli, $redis, $user, $this->feed, $this->input, null);
+        }
+        else {
+            $this->group = null;
+        }
     }
 
     //*****************************************
@@ -376,8 +386,20 @@ class Task_ProcessList {
     // Private functions
 
     private function user_has_access_to_feed($userid, $feedid) {
+        $result = false;
+        // Search user's feeds
         $user_feeds = $this->feed->get_user_feed_ids($userid);
-        return array_search($feedid, $user_feeds) === false ? false : true;
+        $result = array_search($feedid, $user_feeds) === false ? false : true;
+        
+        // If feed doesn't belong to user but group module is installed, we also check if the user has access through a group
+        if ($result === false && is_null($this->group) === false) {
+            $feed = $this->group->getfeed($userid, '', $feedid, 0, 0, 0, 0, 0, 0);
+            if ($feed['success'] === false)
+                $result = false;
+            else
+                $result = true;
+        }
+        return $result;
     }
 
     private function adderror_log_end($origin_function, $options, $error) {
