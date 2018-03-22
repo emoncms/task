@@ -214,7 +214,11 @@ class Task {
             $array[] = $str;
         }
         if (isset($fields->enabled)) {
-            $array[] = "`enabled` = '" . (bool) $fields->enabled . "'";
+            $enabled = (bool) $fields->enabled;
+            if ($enabled === true)
+                $array[] = "`enabled` = '1'";
+            else
+                $array[] = "`enabled` = '0'";
         }
         if (isset($fields->run_on))
             $array[] = "`run_on` = '" . preg_replace('/([^0-9])/', '', $fields->run_on) . "'";
@@ -231,6 +235,8 @@ class Task {
         }
         else {
             $success = false;
+            $error = $this->mysqli->error;
+            $this->log->warn("Error saving task field in database -  " . $this->mysqli->error);
         }
 
         // Update in redis
@@ -260,7 +266,7 @@ class Task {
             return array('success' => true, 'message' => 'Field updated');
         }
         else {
-            return array('success' => false, 'message' => 'Field could not be updated');
+            return array('success' => false, 'message' => 'Field could not be updated - ' . $error);
         }
     }
 
@@ -269,6 +275,33 @@ class Task {
         $id = (int) $id;
         $processlist = preg_replace('/([^a-zA-Z0-9:,_{}(). ])/', '', $processlist);
 
+        // Validate processlist
+        $process_list = $this->process->get_process_list(); // list of available processes 
+        $pairs = explode(",", $processlist);
+        foreach ($pairs as $pair) {
+            $inputprocess = explode(":", $pair);
+            if (count($inputprocess) == 2) {
+                $processid = (int) $inputprocess[0];
+                $arg = (int) $inputprocess[1];
+
+                // Check that feed exists and user has ownership
+                if (isset($process_list[$processid]) && $process_list[$processid][1] == ProcessArg::FEEDID) {
+                    if (!$this->process->feed->access($userid, $arg)) {
+                        return array('success' => false, 'message' => _("Invalid feed"));
+                    }
+                }
+
+                // Check that input exists and user has ownership
+                if (isset($process_list[$processid]) && $process_list[$processid][1] == ProcessArg::INPUTID) {
+                    $inputid = (int) $arg;
+                    $result = $this->mysqli->query("SELECT id FROM input WHERE `userid` = '$userid' AND `id` = '$arg'");
+                    if ($result->num_rows != 1)
+                        return array('success' => false, 'message' => _("Invalid input"));
+                }
+            }
+        }
+
+        // Save processList
         $this->mysqli->query("UPDATE tasks SET `processList` = '$processlist' WHERE `id`='$id' AND `userid`='$userid'");
         if ($this->mysqli->affected_rows > 0) {
             if ($this->redis)
@@ -313,15 +346,21 @@ class Task {
 
     private function run_task($task, $update_next_run = true) {
         $opt = array('sourcetype' => ProcessOriginType::TASK, 'sourceid' => $task['id']);
-        $this->process->input(time(), 0, $task['processList'], $opt);
+        if (is_null($task['processList']) == false && $task['processList'] != '') {
+            $this->process->input(time(), 0, $task['processList'], $opt);
+        }
         if ($update_next_run === true) {
             $frequency = json_decode($task['frequency']);
             if ($frequency->type == 'number_of') {
+                $seconds = 0;
                 $seconds = 7 * 24 * 3600 * $frequency->weeks;
                 $seconds += 24 * 3600 * $frequency->days;
                 $seconds += 3600 * $frequency->hours;
                 $seconds += 60 * $frequency->minutes;
                 $seconds += $frequency->seconds;
+                if ($seconds == 0) {
+                    $result = $this->disableTask($task['userid'], $task['id']);
+                }
                 $this->setRunOn($task['id'], time() + $seconds);
             }
             elseif ($frequency->type == 'one_time') // Task to be run only once
